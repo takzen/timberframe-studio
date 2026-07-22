@@ -48,9 +48,15 @@ pnpm lint
 
 The core is a two-stage pipeline with a hard boundary in the middle:
 
-```
-PrymitywDef[]  ──generators──▶  Element[]  ──┬──▶  three.js meshes
-(what you draw)                (real members)└──▶  bill of materials + cost
+```mermaid
+flowchart LR
+    A["<b>PrymitywDef[]</b><br/>what you draw"]
+    B["<b>Element[]</b><br/>real members"]
+    C["three.js meshes"]
+    D["bill of materials<br/>+ cost"]
+    A -->|pure generators| B
+    B --> C
+    B --> D
 ```
 
 - A **primitive** is what you draw: a wall from A to B, 2.6 m tall, 60 mm studs at 600 mm centres.
@@ -89,3 +95,7 @@ Not there yet:
 Vite · React · TypeScript · three.js via react-three-fiber and drei · zustand · pnpm
 
 Units are metres throughout; the coordinate system is X/Y on the ground with Z up.
+
+## License
+
+MIT © Krzysztof Pika — see [LICENSE](LICENSE).
