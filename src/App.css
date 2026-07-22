@@ -1,0 +1,582 @@
+.uklad {
+  display: grid;
+  grid-template-columns: 1fr 370px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'pasek pasek'
+    'obszar panel';
+  height: 100%;
+}
+
+/* ---------- pasek narzędzi ---------- */
+
+.pasek {
+  grid-area: pasek;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--linia);
+}
+
+.pasek .grupa {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pasek .grupa.prawa {
+  margin-left: auto;
+}
+
+.pasek button,
+.pasek select {
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--tekst-slaby);
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pasek button:hover:not(:disabled),
+.pasek select:hover {
+  color: var(--tekst);
+  border-color: #4a525c;
+}
+
+.pasek button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pasek button.akt {
+  color: #1a1c20;
+  background: var(--akcent);
+  border-color: var(--akcent);
+  font-weight: 600;
+}
+
+.nazwa-projektu {
+  width: 200px;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--akcent);
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+}
+
+.pole-w-pasku {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tekst-slaby);
+}
+
+.pole-w-pasku input {
+  width: 62px;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--tekst);
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 5px;
+}
+
+/* ---------- obszar roboczy ---------- */
+
+.obszar {
+  grid-area: obszar;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-width: 0;
+  min-height: 0;
+}
+
+.obszar > section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--linia);
+}
+
+.obszar h3 {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tekst-slaby);
+  background: var(--panel);
+  border-bottom: 1px solid var(--linia);
+}
+
+.plotno {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- rzut 2D ---------- */
+
+.rzut {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #1a1d21;
+  user-select: none;
+}
+
+.etykieta-rzutu {
+  font-size: 10px;
+  font-family: system-ui, sans-serif;
+  fill: #8b949e;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.etykieta-rzutu.zaznaczona {
+  fill: #f0c088;
+  font-weight: 600;
+}
+
+.wymiar-podgladu {
+  font-size: 12px;
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  fill: #f0c088;
+  pointer-events: none;
+}
+
+.rzut-info {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 12px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tekst-slaby);
+  background: rgba(20, 22, 26, 0.85);
+  border: 1px solid var(--linia);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.rzut-podpowiedz {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  font-size: 11.5px;
+  color: #1a1c20;
+  background: var(--akcent);
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.rzut-podpowiedz.cicha {
+  color: var(--tekst-slaby);
+  background: rgba(20, 22, 26, 0.85);
+  border: 1px solid var(--linia);
+}
+
+.uchwyt {
+  fill: #1a1d21;
+  stroke: #f0c088;
+  stroke-width: 2;
+}
+
+/* punkt zerowy — układ odniesienia projektu */
+
+.punkt-zerowy .os {
+  stroke-width: 1.6;
+}
+
+.punkt-zerowy .os-x {
+  stroke: #d8746a;
+  fill: #d8746a;
+}
+
+.punkt-zerowy .os-y {
+  stroke: #7fbf7a;
+  fill: #7fbf7a;
+}
+
+.punkt-zerowy .oko {
+  fill: none;
+  stroke: #cfd6dd;
+  stroke-width: 1.6;
+}
+
+.punkt-zerowy .srodek {
+  fill: #cfd6dd;
+}
+
+.opis-osi {
+  font-size: 11px;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  stroke: none;
+}
+
+.opis-osi.os-x {
+  fill: #d8746a;
+}
+
+.opis-osi.os-y {
+  fill: #7fbf7a;
+}
+
+.opis-osi.zero {
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: #8b949e;
+}
+
+.podzialka {
+  font-size: 9.5px;
+  font-family: system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  fill: #6e7781;
+  pointer-events: none;
+}
+
+.podzialka.poziomo {
+  text-anchor: middle;
+}
+
+.rzut-narzedzia {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.rzut-narzedzia button {
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--tekst-slaby);
+  background: rgba(20, 22, 26, 0.9);
+  border: 1px solid var(--linia);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.rzut-narzedzia button:hover {
+  color: var(--tekst);
+  border-color: var(--akcent);
+}
+
+/* ---------- panel boczny ---------- */
+
+.panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--linia);
+}
+
+.panel h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tekst-slaby);
+}
+
+.panel section + section {
+  border-top: 1px solid var(--linia);
+  padding-top: 12px;
+}
+
+.panel .wlasciwosci h2 {
+  color: var(--akcent);
+}
+
+.panel .rozciagnij {
+  flex: 1;
+}
+
+.opis {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--tekst-slaby);
+}
+
+/* ---------- pola formularza ---------- */
+
+.siatka-pol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.pole {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--tekst-slaby);
+}
+
+.pole > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pole input,
+.pole select,
+.pole output {
+  width: 100%;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--tekst);
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 5px;
+}
+
+.pole output {
+  color: var(--tekst-slaby);
+  background: transparent;
+  border-style: dashed;
+}
+
+.pole input:focus,
+.pole select:focus {
+  outline: none;
+  border-color: var(--akcent);
+}
+
+/* pola z długą nazwą materiału zajmują całą szerokość */
+.siatka-pol > .pole:has(select option:nth-child(4)) {
+  grid-column: 1 / -1;
+}
+
+/* ---------- otwory ---------- */
+
+.otwory {
+  margin-top: 12px;
+}
+
+.otwory-naglowek {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tekst-slaby);
+}
+
+.otwory-naglowek span:last-child {
+  display: flex;
+  gap: 4px;
+}
+
+.otwor {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+}
+
+.otwor-tytul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--tekst);
+}
+
+/* ---------- przyciski ---------- */
+
+.przelacznik {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.przelacznik button {
+  padding: 7px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--tekst-slaby);
+  background: var(--panel-2);
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.przelacznik button.akt {
+  color: #1a1c20;
+  background: var(--akcent);
+  border-color: var(--akcent);
+  font-weight: 600;
+}
+
+.ptaszek {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ptaszek input {
+  accent-color: var(--akcent);
+}
+
+.ptaszek.w-polach {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  color: var(--tekst-slaby);
+}
+
+button.mini {
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--akcent);
+  background: transparent;
+  border: 1px solid var(--akcent);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button.mini:hover {
+  color: #1a1c20;
+  background: var(--akcent);
+}
+
+button.mini.usun {
+  color: #e08b7c;
+  border-color: #7a4740;
+}
+
+button.mini.usun:hover {
+  color: #1a1c20;
+  background: #e08b7c;
+}
+
+/* ---------- tabele ---------- */
+
+table.materialy,
+table.podsumowanie {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+table.materialy {
+  margin-top: 8px;
+}
+
+table.materialy th,
+table.materialy td {
+  padding: 4px 3px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--linia);
+}
+
+table.materialy thead th {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tekst-slaby);
+}
+
+table.materialy .num,
+table.podsumowanie .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.materialy .naglowek-sekcji th {
+  padding-top: 12px;
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--akcent);
+  border-bottom-color: var(--akcent);
+}
+
+table.podsumowanie {
+  margin-top: 12px;
+  border-top: 1px solid var(--linia);
+}
+
+table.podsumowanie td {
+  padding: 4px 3px;
+}
+
+table.podsumowanie .razem td {
+  padding-top: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--akcent);
+  border-top: 1px solid var(--linia);
+}
+
+.dlugosci {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--tekst-slaby);
+}
+
+@media (max-width: 1200px) {
+  .uklad {
+    grid-template-columns: 1fr 320px;
+  }
+
+  .obszar {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
