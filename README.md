@@ -36,14 +36,14 @@ pnpm install
 pnpm dev
 ```
 
-Then load a template from the **Szablon…** dropdown in the toolbar and hit **Dopasuj** to frame the view.
+Then load a template from the **Template…** dropdown in the toolbar and hit **Fit** to frame the view.
 
 ```bash
 pnpm build     # typecheck + production build
 pnpm lint
 ```
 
-> **Note:** the interface is currently **Polish only**, as are the identifiers in the source. The domain vocabulary (`słup` = post, `belka` = beam, `krokiew` = rafter, `zastrzał` = knee brace, `oczep` = top plate, `podwalina` = sill plate) is deliberate — it matches how drawings and lumber orders are actually written here.
+> **Bilingual UI.** The interface ships in **English and Polish** — toggle **PL / EN** in the toolbar (Polish is the default). The codebase itself is English throughout; Polish lives only in the translation layer (`src/i18n.ts`), so the domain terms shown to Polish users (`słup` = post, `krokiew` = rafter, `zastrzał` = brace) are translations, not identifiers.
 
 ## How it works
 
@@ -66,15 +66,18 @@ flowchart LR
 
 ```
 src/
+  i18n.ts                 EN/PL dictionary + translate helper
   model/
-    typy.ts               primitive definitions + the universal Element
-    katalog.ts            sections, species, sheathing, fasteners — with prices
-    generatory/           pure Def → Element[] functions, one per primitive
-    materialy.ts          bill of materials, fastener rules, cost, CSV
-  rzut/                   2D plan editor (SVG): drawing, snapping, dragging
-  scena/                  3D preview (react-three-fiber)
-  ui/                     toolbar, property panel, BOM table
-  projekty/               starter templates
+    types.ts              primitive definitions + the universal Element
+    catalog.ts            sections, species, sheathing, concrete, fasteners — prices
+    generators/           pure Def → Element[] functions, one per primitive
+    materials.ts          bill of materials, fastener rules, cost, CSV
+    structural/           indicative EC5 checks + load path
+    foundations/          post footings + slab, sized from the load path
+  plan/                   2D plan editor (SVG): drawing, snapping, dragging
+  scene/                  3D preview (react-three-fiber)
+  ui/                     toolbar, property panel, tables
+  templates/              starter templates
 ```
 
 ## Status

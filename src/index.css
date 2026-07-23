@@ -1,16 +1,16 @@
 :root {
-  --tlo: #14161a;
+  --bg: #14161a;
   --panel: #1c1f24;
   --panel-2: #23272e;
-  --linia: #333941;
-  --tekst: #d7dbe0;
-  --tekst-slaby: #8d959f;
-  --akcent: #d9a066;
+  --line: #333941;
+  --text: #d7dbe0;
+  --text-dim: #8d959f;
+  --accent: #d9a066;
 
   font: 14px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
-  color: var(--tekst);
-  background: var(--tlo);
+  color: var(--text);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
 

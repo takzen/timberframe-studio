@@ -1,243 +1,224 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { nowyPrymityw, opisTypu } from './model/domyslne';
-import type { UstawieniaFundamentow } from './model/fundamenty/typy';
-import { znajdzStrefe } from './model/statyka/obciazenia';
-import type { KlasaUzytkowania, UstawieniaStatyki } from './model/statyka/typy';
-import type { Grupa, PrymitywDef, TypPrymitywu, Vec2 } from './model/typy';
+import type { Language } from './i18n';
+import { newPrimitive, typeInfo } from './model/defaults';
+import type { FoundationSettings } from './model/foundations/types';
+import { findSnowZone } from './model/structural/loads';
+import type { ServiceClass, StructuralSettings } from './model/structural/types';
+import type { Group, PrimitiveDef, PrimitiveType, Vec2 } from './model/types';
 
-export type TrybWidoku = 'pelny' | 'konstrukcja';
-export type Narzedzie = 'wybor' | TypPrymitywu;
+export type ViewMode = 'full' | 'frame';
+export type Tool = 'select' | PrimitiveType;
 
-export const GRUPY: { id: Grupa; etykieta: string }[] = [
-  { id: 'slupy', etykieta: 'Słupy' },
-  { id: 'belki', etykieta: 'Belki' },
-  { id: 'podesty', etykieta: 'Podesty / tarasy' },
-  { id: 'sciany', etykieta: 'Ściany' },
-  { id: 'dachy', etykieta: 'Dachy' },
-  { id: 'fundamenty', etykieta: 'Fundamenty' },
+export const GROUPS: { id: Group; labelKey: string }[] = [
+  { id: 'posts', labelKey: 'group.posts' },
+  { id: 'beams', labelKey: 'group.beams' },
+  { id: 'decks', labelKey: 'group.decks' },
+  { id: 'walls', labelKey: 'group.walls' },
+  { id: 'roofs', labelKey: 'group.roofs' },
+  { id: 'foundations', labelKey: 'group.foundations' },
 ];
 
-const MAKS_HISTORII = 60;
-const noweId = () => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const MAX_HISTORY = 60;
+const newId = () => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-interface Stan {
-  nazwa: string;
-  prymitywy: PrymitywDef[];
-  zaznaczony: string | null;
-  narzedzie: Narzedzie;
-  /** Wysokość robocza — baza dla nowych belek i dachów. */
-  poziomRoboczy: number;
-  /** Skok przyciągania w rzucie, w metrach. */
-  skokSiatki: number;
-  trybWidoku: TrybWidoku;
-  widoczneGrupy: Record<Grupa, boolean>;
-  pokazSiatke: boolean;
-  /** Koloruje przeciążone elementy na rysunku i w 3D. */
-  pokazWytezenie: boolean;
+interface State {
+  language: Language;
+  name: string;
+  primitives: PrimitiveDef[];
+  selected: string | null;
+  tool: Tool;
+  /** Work level — base for new beams and roofs. */
+  workLevel: number;
+  /** Snap step on the plan, in metres. */
+  gridStep: number;
+  viewMode: ViewMode;
+  visibleGroups: Record<Group, boolean>;
+  showGrid: boolean;
+  /** Colours over-utilised members on the plan and in 3D. */
+  showUtilisation: boolean;
+  structural: StructuralSettings;
+  foundations: FoundationSettings;
 
-  /** Ustawienia orientacyjnej analizy statycznej. */
-  statyka: UstawieniaStatyki;
-  /** Ustawienia doboru fundamentów. */
-  fundamenty: UstawieniaFundamentow;
+  history: PrimitiveDef[][];
+  historyIndex: number;
 
-  historia: PrymitywDef[][];
-  indeksHistorii: number;
-
-  dodaj: (typ: TypPrymitywu, a: Vec2, b: Vec2) => void;
-  aktualizuj: (id: string, zmiany: Partial<PrymitywDef>) => void;
-  /** Podgląd zmiany w trakcie przeciągania — nie zaśmieca historii. */
-  aktualizujNaZywo: (id: string, zmiany: Partial<PrymitywDef>) => void;
-  /** Zamyka przeciąganie jednym wpisem w historii. */
-  zatwierdz: () => void;
-  usun: (id: string) => void;
-  zaznacz: (id: string | null) => void;
-  ustawNarzedzie: (n: Narzedzie) => void;
-  ustawPoziom: (z: number) => void;
-  ustawSkok: (s: number) => void;
-  ustawTryb: (t: TrybWidoku) => void;
-  przelaczGrupe: (g: Grupa) => void;
-  przelaczSiatke: () => void;
-  przelaczWytezenie: () => void;
-  ustawStrefeSniegu: (strefa: number) => void;
-  ustawSniegSk: (sk: number) => void;
-  ustawKlaseUzytkowania: (k: KlasaUzytkowania) => void;
-  ustawObciazenieUzytkowe: (q: number) => void;
-  ustawFundamenty: (zmiany: Partial<UstawieniaFundamentow>) => void;
-  cofnij: () => void;
-  ponow: () => void;
-  wczytaj: (nazwa: string, prymitywy: PrymitywDef[]) => void;
-  ustawNazwe: (nazwa: string) => void;
-  nowy: () => void;
+  add: (type: PrimitiveType, a: Vec2, b: Vec2) => void;
+  update: (id: string, changes: Partial<PrimitiveDef>) => void;
+  /** Live preview of a change during dragging — does not clutter the history. */
+  updateLive: (id: string, changes: Partial<PrimitiveDef>) => void;
+  /** Closes a drag with a single history entry. */
+  commit: () => void;
+  remove: (id: string) => void;
+  select: (id: string | null) => void;
+  setTool: (t: Tool) => void;
+  setWorkLevel: (z: number) => void;
+  setGridStep: (s: number) => void;
+  setViewMode: (m: ViewMode) => void;
+  toggleGroup: (g: Group) => void;
+  toggleGrid: () => void;
+  toggleUtilisation: () => void;
+  setSnowZone: (zone: number) => void;
+  setSnowSk: (sk: number) => void;
+  setServiceClass: (c: ServiceClass) => void;
+  setImposedLoad: (q: number) => void;
+  setFoundations: (changes: Partial<FoundationSettings>) => void;
+  setLanguage: (lang: Language) => void;
+  undo: () => void;
+  redo: () => void;
+  load: (name: string, primitives: PrimitiveDef[]) => void;
+  setName: (name: string) => void;
+  reset: () => void;
 }
 
-export const useStore = create<Stan>()(
+export const useStore = create<State>()(
   persist(
     (set, get) => {
-      /** Zapisuje nowy stan prymitywów wraz z wpisem w historii. */
-      const zHistoria = (prymitywy: PrymitywDef[], reszta: Partial<Stan> = {}) => {
-        const { historia, indeksHistorii } = get();
-        const przycieta = historia.slice(0, indeksHistorii + 1);
-        przycieta.push(prymitywy);
-        const nadmiar = Math.max(0, przycieta.length - MAKS_HISTORII);
+      /** Saves a new primitives state together with a history entry. */
+      const withHistory = (primitives: PrimitiveDef[], rest: Partial<State> = {}) => {
+        const { history, historyIndex } = get();
+        const trimmed = history.slice(0, historyIndex + 1);
+        trimmed.push(primitives);
+        const overflow = Math.max(0, trimmed.length - MAX_HISTORY);
         set({
-          prymitywy,
-          historia: przycieta.slice(nadmiar),
-          indeksHistorii: przycieta.length - nadmiar - 1,
-          ...reszta,
+          primitives,
+          history: trimmed.slice(overflow),
+          historyIndex: trimmed.length - overflow - 1,
+          ...rest,
         });
       };
 
       return {
-        nazwa: 'Nowy projekt',
-        prymitywy: [],
-        zaznaczony: null,
-        narzedzie: 'wybor',
-        poziomRoboczy: 2.6,
-        skokSiatki: 0.1,
-        trybWidoku: 'pelny',
-        widoczneGrupy: {
-          slupy: true,
-          belki: true,
-          podesty: true,
-          dachy: true,
-          sciany: true,
-          fundamenty: true,
+        language: 'pl',
+        // empty = default; the toolbar shows the translated "New project"
+        name: '',
+        primitives: [],
+        selected: null,
+        tool: 'select',
+        workLevel: 2.6,
+        gridStep: 0.1,
+        viewMode: 'full',
+        visibleGroups: {
+          posts: true,
+          beams: true,
+          decks: true,
+          roofs: true,
+          walls: true,
+          foundations: true,
         },
-        pokazSiatke: true,
-        pokazWytezenie: true,
-        statyka: { strefaSniegu: 2, sniegSk: 0.9, klasaUzytkowania: 2, obciazenieUzytkowe: 2.0 },
-        fundamenty: {
-          nosnoscGruntu: 150,
-          klasaBetonu: 'c16-20',
-          glebokoscPrzemarzania: 1.0,
-          minStopa: 0.4,
-          gruboscStopy: 0.4,
+        showGrid: true,
+        showUtilisation: true,
+        structural: { snowZone: 2, snowSk: 0.9, serviceClass: 2, imposedLoad: 2.0 },
+        foundations: {
+          soilBearing: 150,
+          concreteClass: 'c16-20',
+          frostDepth: 1.0,
+          minFooting: 0.4,
+          footingThickness: 0.4,
         },
-        historia: [[]],
-        indeksHistorii: 0,
+        history: [[]],
+        historyIndex: 0,
 
-        dodaj: (typ, a, b) => {
-          const { prymitywy, poziomRoboczy } = get();
-          const { prefiks, etykieta } = opisTypu(typ);
-          const uzyte = prymitywy.filter((p) => opisTypu(p.typ).prefiks === prefiks).length;
-          const id = noweId();
-          const def = nowyPrymityw(
-            typ,
-            id,
-            `${etykieta} ${prefiks}-${uzyte + 1}`,
-            a,
-            b,
-            poziomRoboczy,
+        add: (type, a, b) => {
+          const { primitives, workLevel } = get();
+          const { prefix } = typeInfo(type);
+          const used = primitives.filter((p) => typeInfo(p.type).prefix === prefix).length;
+          const id = newId();
+          const def = newPrimitive(type, id, `${prefix}-${used + 1}`, a, b, workLevel);
+          withHistory([...primitives, def], { selected: id, tool: 'select' });
+        },
+
+        update: (id, changes) => {
+          const primitives = get().primitives.map((p) =>
+            p.id === id ? ({ ...p, ...changes } as PrimitiveDef) : p,
           );
-          zHistoria([...prymitywy, def], { zaznaczony: id, narzedzie: 'wybor' });
+          withHistory(primitives);
         },
 
-        aktualizuj: (id, zmiany) => {
-          const prymitywy = get().prymitywy.map((p) =>
-            p.id === id ? ({ ...p, ...zmiany } as PrymitywDef) : p,
-          );
-          zHistoria(prymitywy);
-        },
-
-        aktualizujNaZywo: (id, zmiany) =>
+        updateLive: (id, changes) =>
           set({
-            prymitywy: get().prymitywy.map((p) =>
-              p.id === id ? ({ ...p, ...zmiany } as PrymitywDef) : p,
+            primitives: get().primitives.map((p) =>
+              p.id === id ? ({ ...p, ...changes } as PrimitiveDef) : p,
             ),
           }),
 
-        zatwierdz: () => {
-          const { prymitywy, historia, indeksHistorii } = get();
-          // bez zmian względem ostatniego wpisu nie ma czego zapisywać
-          if (historia[indeksHistorii] === prymitywy) return;
-          zHistoria(prymitywy);
+        commit: () => {
+          const { primitives, history, historyIndex } = get();
+          if (history[historyIndex] === primitives) return;
+          withHistory(primitives);
         },
 
-        usun: (id) => {
-          zHistoria(
-            get().prymitywy.filter((p) => p.id !== id),
-            { zaznaczony: null },
+        remove: (id) => {
+          withHistory(
+            get().primitives.filter((p) => p.id !== id),
+            { selected: null },
           );
         },
 
-        zaznacz: (zaznaczony) => set({ zaznaczony }),
-        ustawNarzedzie: (narzedzie) =>
-          set({ narzedzie, zaznaczony: narzedzie === 'wybor' ? get().zaznaczony : null }),
-        ustawPoziom: (poziomRoboczy) => set({ poziomRoboczy }),
-        ustawSkok: (skokSiatki) => set({ skokSiatki }),
-        ustawTryb: (trybWidoku) => set({ trybWidoku }),
-        przelaczGrupe: (g) =>
-          set((s) => ({ widoczneGrupy: { ...s.widoczneGrupy, [g]: !s.widoczneGrupy[g] } })),
-        przelaczSiatke: () => set((s) => ({ pokazSiatke: !s.pokazSiatke })),
-        przelaczWytezenie: () => set((s) => ({ pokazWytezenie: !s.pokazWytezenie })),
-        ustawStrefeSniegu: (strefa) =>
+        select: (selected) => set({ selected }),
+        setTool: (tool) => set({ tool, selected: tool === 'select' ? get().selected : null }),
+        setWorkLevel: (workLevel) => set({ workLevel }),
+        setGridStep: (gridStep) => set({ gridStep }),
+        setViewMode: (viewMode) => set({ viewMode }),
+        toggleGroup: (g) =>
+          set((s) => ({ visibleGroups: { ...s.visibleGroups, [g]: !s.visibleGroups[g] } })),
+        toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
+        toggleUtilisation: () => set((s) => ({ showUtilisation: !s.showUtilisation })),
+        setSnowZone: (zone) =>
           set((s) => ({
-            statyka: { ...s.statyka, strefaSniegu: strefa, sniegSk: znajdzStrefe(strefa).sk },
+            structural: { ...s.structural, snowZone: zone, snowSk: findSnowZone(zone).sk },
           })),
-        ustawSniegSk: (sniegSk) => set((s) => ({ statyka: { ...s.statyka, sniegSk } })),
-        ustawKlaseUzytkowania: (klasaUzytkowania) =>
-          set((s) => ({ statyka: { ...s.statyka, klasaUzytkowania } })),
-        ustawObciazenieUzytkowe: (obciazenieUzytkowe) =>
-          set((s) => ({ statyka: { ...s.statyka, obciazenieUzytkowe } })),
-        ustawFundamenty: (zmiany) =>
-          set((s) => ({ fundamenty: { ...s.fundamenty, ...zmiany } })),
+        setSnowSk: (snowSk) => set((s) => ({ structural: { ...s.structural, snowSk } })),
+        setServiceClass: (serviceClass) =>
+          set((s) => ({ structural: { ...s.structural, serviceClass } })),
+        setImposedLoad: (imposedLoad) =>
+          set((s) => ({ structural: { ...s.structural, imposedLoad } })),
+        setFoundations: (changes) =>
+          set((s) => ({ foundations: { ...s.foundations, ...changes } })),
+        setLanguage: (language) => set({ language }),
 
-        cofnij: () => {
-          const { historia, indeksHistorii } = get();
-          if (indeksHistorii <= 0) return;
-          set({
-            indeksHistorii: indeksHistorii - 1,
-            prymitywy: historia[indeksHistorii - 1],
-            zaznaczony: null,
-          });
+        undo: () => {
+          const { history, historyIndex } = get();
+          if (historyIndex <= 0) return;
+          set({ historyIndex: historyIndex - 1, primitives: history[historyIndex - 1], selected: null });
         },
-        ponow: () => {
-          const { historia, indeksHistorii } = get();
-          if (indeksHistorii >= historia.length - 1) return;
-          set({
-            indeksHistorii: indeksHistorii + 1,
-            prymitywy: historia[indeksHistorii + 1],
-            zaznaczony: null,
-          });
+        redo: () => {
+          const { history, historyIndex } = get();
+          if (historyIndex >= history.length - 1) return;
+          set({ historyIndex: historyIndex + 1, primitives: history[historyIndex + 1], selected: null });
         },
 
-        wczytaj: (nazwa, prymitywy) => {
-          set({ nazwa, zaznaczony: null, narzedzie: 'wybor', historia: [[]], indeksHistorii: 0 });
-          zHistoria(prymitywy);
+        load: (name, primitives) => {
+          set({ name, selected: null, tool: 'select', history: [[]], historyIndex: 0 });
+          withHistory(primitives);
         },
-        ustawNazwe: (nazwa) => set({ nazwa }),
-        nowy: () => {
-          set({
-            nazwa: 'Nowy projekt',
-            zaznaczony: null,
-            narzedzie: 'wybor',
-            historia: [[]],
-            indeksHistorii: 0,
-          });
-          zHistoria([]);
+        setName: (name) => set({ name }),
+        reset: () => {
+          set({ name: '', selected: null, tool: 'select', history: [[]], historyIndex: 0 });
+          withHistory([]);
         },
       };
     },
     {
-      name: 'timberframe-studio',
+      name: 'timberframe-studio-v2',
       partialize: (s) => ({
-        nazwa: s.nazwa,
-        prymitywy: s.prymitywy,
-        poziomRoboczy: s.poziomRoboczy,
-        skokSiatki: s.skokSiatki,
-        trybWidoku: s.trybWidoku,
-        widoczneGrupy: s.widoczneGrupy,
-        pokazSiatke: s.pokazSiatke,
-        pokazWytezenie: s.pokazWytezenie,
-        statyka: s.statyka,
-        fundamenty: s.fundamenty,
+        language: s.language,
+        name: s.name,
+        primitives: s.primitives,
+        workLevel: s.workLevel,
+        gridStep: s.gridStep,
+        viewMode: s.viewMode,
+        visibleGroups: s.visibleGroups,
+        showGrid: s.showGrid,
+        showUtilisation: s.showUtilisation,
+        structural: s.structural,
+        foundations: s.foundations,
       }),
-      onRehydrateStorage: () => (stan) => {
-        // historia startuje od wczytanego projektu, nie od pustego
-        if (stan) {
-          stan.historia = [stan.prymitywy];
-          stan.indeksHistorii = 0;
+      onRehydrateStorage: () => (state) => {
+        // history starts from the loaded project, not from empty
+        if (state) {
+          state.history = [state.primitives];
+          state.historyIndex = 0;
         }
       },
     },
