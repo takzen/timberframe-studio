@@ -60,6 +60,30 @@ export const PRZEKROJE: PrzekrojKatalogowy[] = [
   przekroj(32, 145, 'deska'),
 ];
 
+/**
+ * Właściwości mechaniczne drewna wg EN 338 (lite) / EN 14080 (klejone),
+ * wartości charakterystyczne. Jednostki: wytrzymałości i moduły w MPa (N/mm²),
+ * gęstość w kg/m³. Służą do orientacyjnego sprawdzenia nośności wg EC5.
+ */
+export interface WlasciwosciMech {
+  /** Klasa wytrzymałości, np. "C24", "GL24h". */
+  klasa: string;
+  /** Wytrzymałość na zginanie f_m,k [MPa]. */
+  fmk: number;
+  /** Wytrzymałość na ścinanie f_v,k [MPa]. */
+  fvk: number;
+  /** Wytrzymałość na ściskanie wzdłuż włókien f_c,0,k [MPa]. */
+  fc0k: number;
+  /** Średni moduł sprężystości E_0,mean [MPa]. */
+  E0mean: number;
+  /** Moduł 5-procentowy E_0,05 [MPa] — do wyboczenia. */
+  E005: number;
+  /** Gęstość średnia [kg/m³] — do ciężaru własnego. */
+  rhomean: number;
+  /** Drewno klejone warstwowo (inny γ_M, k_h). */
+  klejone: boolean;
+}
+
 export interface Gatunek {
   id: string;
   nazwa: string;
@@ -68,7 +92,53 @@ export interface Gatunek {
   cenaM3: number;
   kolor: string;
   roughness: number;
+  mech: WlasciwosciMech;
 }
+
+// wartości charakterystyczne wg EN 338 / EN 14080
+const C24: WlasciwosciMech = {
+  klasa: 'C24',
+  fmk: 24,
+  fvk: 4.0,
+  fc0k: 21,
+  E0mean: 11000,
+  E005: 7400,
+  rhomean: 420,
+  klejone: false,
+};
+const C30: WlasciwosciMech = {
+  klasa: 'C30',
+  fmk: 30,
+  fvk: 4.0,
+  fc0k: 23,
+  E0mean: 12000,
+  E005: 8000,
+  rhomean: 460,
+  klejone: false,
+};
+const GL24h: WlasciwosciMech = {
+  klasa: 'GL24h',
+  fmk: 24,
+  fvk: 3.5,
+  fc0k: 24,
+  E0mean: 11500,
+  E005: 9600,
+  rhomean: 420,
+  klejone: true,
+};
+// modrzew konstrukcyjny zwykle klasyfikowany jako C24/C30 — przyjęto C24 z większą gęstością
+const MODRZEW: WlasciwosciMech = { ...C24, klasa: 'C24 (modrzew)', rhomean: 590 };
+// dąb — drewno liściaste D30 wg EN 338
+const D30: WlasciwosciMech = {
+  klasa: 'D30',
+  fmk: 30,
+  fvk: 3.9,
+  fc0k: 23,
+  E0mean: 10000,
+  E005: 8000,
+  rhomean: 640,
+  klejone: false,
+};
 
 export const GATUNKI: Gatunek[] = [
   {
@@ -78,6 +148,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 2400,
     kolor: '#c9a06a',
     roughness: 0.78,
+    mech: C24,
   },
   {
     id: 'swierk-kvh',
@@ -86,6 +157,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 2900,
     kolor: '#d8b989',
     roughness: 0.72,
+    mech: C24,
   },
   {
     id: 'sosna-c30',
@@ -94,6 +166,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 2800,
     kolor: '#c69a5e',
     roughness: 0.78,
+    mech: C30,
   },
   {
     id: 'bsh-gl24',
@@ -102,6 +175,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 4100,
     kolor: '#dcc199',
     roughness: 0.6,
+    mech: GL24h,
   },
   {
     id: 'impregnowana',
@@ -110,6 +184,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 2700,
     kolor: '#9aa86e',
     roughness: 0.85,
+    mech: { ...C24, rhomean: 450 },
   },
   {
     id: 'modrzew',
@@ -118,6 +193,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 5200,
     kolor: '#a9723f',
     roughness: 0.82,
+    mech: MODRZEW,
   },
   {
     id: 'dab',
@@ -126,6 +202,7 @@ export const GATUNKI: Gatunek[] = [
     cenaM3: 8500,
     kolor: '#8a6234',
     roughness: 0.7,
+    mech: D30,
   },
 ];
 
@@ -136,26 +213,30 @@ export interface MaterialPoszycia {
   grubosc: number;
   /** PLN za m². */
   cenaM2: number;
+  /** Ciężar [kg/m²] — do obciążenia stałego w statyce. */
+  masa: number;
   kolor: string;
   roughness: number;
 }
 
+// masy: OSB/MFP ~600 kg/m³ × grubość; deskowanie sosna ~500; pokrycia z warstwą użytkową
 export const POSZYCIA: MaterialPoszycia[] = [
-  { id: 'osb12', nazwa: 'OSB/3 12 mm', grubosc: 0.012, cenaM2: 38, kolor: '#cbb68f', roughness: 0.95 },
-  { id: 'osb15', nazwa: 'OSB/3 15 mm', grubosc: 0.015, cenaM2: 46, kolor: '#cbb68f', roughness: 0.95 },
-  { id: 'osb18', nazwa: 'OSB/3 18 mm', grubosc: 0.018, cenaM2: 55, kolor: '#cbb68f', roughness: 0.95 },
-  { id: 'osb22', nazwa: 'OSB/3 22 mm', grubosc: 0.022, cenaM2: 68, kolor: '#c3ad85', roughness: 0.95 },
-  { id: 'mfp12', nazwa: 'Płyta MFP 12 mm', grubosc: 0.012, cenaM2: 42, kolor: '#c8bfa4', roughness: 0.95 },
+  { id: 'osb12', nazwa: 'OSB/3 12 mm', grubosc: 0.012, cenaM2: 38, masa: 7.2, kolor: '#cbb68f', roughness: 0.95 },
+  { id: 'osb15', nazwa: 'OSB/3 15 mm', grubosc: 0.015, cenaM2: 46, masa: 9, kolor: '#cbb68f', roughness: 0.95 },
+  { id: 'osb18', nazwa: 'OSB/3 18 mm', grubosc: 0.018, cenaM2: 55, masa: 10.8, kolor: '#cbb68f', roughness: 0.95 },
+  { id: 'osb22', nazwa: 'OSB/3 22 mm', grubosc: 0.022, cenaM2: 68, masa: 13.2, kolor: '#c3ad85', roughness: 0.95 },
+  { id: 'mfp12', nazwa: 'Płyta MFP 12 mm', grubosc: 0.012, cenaM2: 42, masa: 7.5, kolor: '#c8bfa4', roughness: 0.95 },
   {
     id: 'deskowanie24',
     nazwa: 'Deskowanie pełne 24 mm',
     grubosc: 0.024,
     cenaM2: 62,
+    masa: 12,
     kolor: '#c0996a',
     roughness: 0.9,
   },
-  { id: 'blacha', nazwa: 'Blachodachówka', grubosc: 0.006, cenaM2: 79, kolor: '#5c5f63', roughness: 0.45 },
-  { id: 'papa', nazwa: 'Papa termozgrzewalna', grubosc: 0.005, cenaM2: 34, kolor: '#4a4744', roughness: 0.9 },
+  { id: 'blacha', nazwa: 'Blachodachówka', grubosc: 0.006, cenaM2: 79, masa: 5, kolor: '#5c5f63', roughness: 0.45 },
+  { id: 'papa', nazwa: 'Papa termozgrzewalna', grubosc: 0.005, cenaM2: 34, masa: 5, kolor: '#4a4744', roughness: 0.9 },
 ];
 
 export interface Lacznik {

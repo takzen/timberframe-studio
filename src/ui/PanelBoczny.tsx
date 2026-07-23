@@ -1,10 +1,11 @@
 import type { Element } from '../model/typy';
 import { eksportujCSV, zestawienie } from '../model/materialy';
 import { GRUPY, useStore } from '../store';
+import { PanelAnalizy } from './PanelAnalizy';
 import { PanelWlasciwosci } from './PanelWlasciwosci';
 import { TabelaMaterialowa } from './TabelaMaterialowa';
 
-export function PanelBoczny({ elementy }: { elementy: Element[] }) {
+export function PanelBoczny({ elementy, wszystkie }: { elementy: Element[]; wszystkie: Element[] }) {
   const nazwa = useStore((s) => s.nazwa);
   const trybWidoku = useStore((s) => s.trybWidoku);
   const widoczneGrupy = useStore((s) => s.widoczneGrupy);
@@ -47,6 +48,8 @@ export function PanelBoczny({ elementy }: { elementy: Element[] }) {
           </label>
         ))}
       </section>
+
+      {wszystkie.length > 0 && <PanelAnalizy elementy={wszystkie} />}
 
       <section className="rozciagnij">
         <h2>

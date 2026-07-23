@@ -44,6 +44,10 @@ export function generujDachDwuspadowy(def: DachDwuspadowyDef): Element[] {
   const pozycjeKrokwi = rozmiesc(k0 + kw / 2, k1 - kw / 2, rozstaw);
   const kSrodek = (k0 + k1) / 2;
 
+  // statyka: rozpiętość krokwi = od okapu (krawędź obrysu) do kalenicy, po połaci
+  const cosA = Math.cos((def.kat * Math.PI) / 180) || 1;
+  const rozpietoscKrokwi = (s1 - s0) / 2 / cosA;
+
   // dwie połacie: od okapu do kalenicy (krokwie dobijają do belki kalenicowej)
   const polacie = [
     { sOkap: s0 - okap, sKalenica: sSrodek - bw / 2 },
@@ -66,6 +70,12 @@ export function generujDachDwuspadowy(def: DachDwuspadowyDef): Element[] {
         do: do_,
         przekroj: [kw, kh],
         gatunek: def.gatunek,
+        statyka: {
+          rozpietosc: rozpietoscKrokwi,
+          szerokoscObciazenia: rozstaw,
+          kat: def.kat,
+          pokrycie: poszycie.id,
+        },
       });
     });
 

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nowyPrymityw, opisTypu } from './model/domyslne';
+import { znajdzStrefe } from './model/statyka/obciazenia';
+import type { KlasaUzytkowania, UstawieniaStatyki } from './model/statyka/typy';
 import type { Grupa, PrymitywDef, TypPrymitywu, Vec2 } from './model/typy';
 
 export type TrybWidoku = 'pelny' | 'konstrukcja';
@@ -30,6 +32,9 @@ interface Stan {
   widoczneGrupy: Record<Grupa, boolean>;
   pokazSiatke: boolean;
 
+  /** Ustawienia orientacyjnej analizy statycznej. */
+  statyka: UstawieniaStatyki;
+
   historia: PrymitywDef[][];
   indeksHistorii: number;
 
@@ -47,6 +52,10 @@ interface Stan {
   ustawTryb: (t: TrybWidoku) => void;
   przelaczGrupe: (g: Grupa) => void;
   przelaczSiatke: () => void;
+  ustawStrefeSniegu: (strefa: number) => void;
+  ustawSniegSk: (sk: number) => void;
+  ustawKlaseUzytkowania: (k: KlasaUzytkowania) => void;
+  ustawObciazenieUzytkowe: (q: number) => void;
   cofnij: () => void;
   ponow: () => void;
   wczytaj: (nazwa: string, prymitywy: PrymitywDef[]) => void;
@@ -81,6 +90,7 @@ export const useStore = create<Stan>()(
         trybWidoku: 'pelny',
         widoczneGrupy: { slupy: true, belki: true, podesty: true, dachy: true, sciany: true },
         pokazSiatke: true,
+        statyka: { strefaSniegu: 2, sniegSk: 0.9, klasaUzytkowania: 2, obciazenieUzytkowe: 2.0 },
         historia: [[]],
         indeksHistorii: 0,
 
@@ -137,6 +147,15 @@ export const useStore = create<Stan>()(
         przelaczGrupe: (g) =>
           set((s) => ({ widoczneGrupy: { ...s.widoczneGrupy, [g]: !s.widoczneGrupy[g] } })),
         przelaczSiatke: () => set((s) => ({ pokazSiatke: !s.pokazSiatke })),
+        ustawStrefeSniegu: (strefa) =>
+          set((s) => ({
+            statyka: { ...s.statyka, strefaSniegu: strefa, sniegSk: znajdzStrefe(strefa).sk },
+          })),
+        ustawSniegSk: (sniegSk) => set((s) => ({ statyka: { ...s.statyka, sniegSk } })),
+        ustawKlaseUzytkowania: (klasaUzytkowania) =>
+          set((s) => ({ statyka: { ...s.statyka, klasaUzytkowania } })),
+        ustawObciazenieUzytkowe: (obciazenieUzytkowe) =>
+          set((s) => ({ statyka: { ...s.statyka, obciazenieUzytkowe } })),
 
         cofnij: () => {
           const { historia, indeksHistorii } = get();
@@ -184,6 +203,7 @@ export const useStore = create<Stan>()(
         trybWidoku: s.trybWidoku,
         widoczneGrupy: s.widoczneGrupy,
         pokazSiatke: s.pokazSiatke,
+        statyka: s.statyka,
       }),
       onRehydrateStorage: () => (stan) => {
         // historia startuje od wczytanego projektu, nie od pustego

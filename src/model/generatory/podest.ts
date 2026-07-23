@@ -39,6 +39,8 @@ export function generujPodest(def: PodestDef): Element[] {
       do: pkt(p, dlWzdluz, zOsLegara),
       przekroj: [legar[0], legar[1]],
       gatunek: def.gatunek,
+      // statyka: legar jako belka wolnopodparta na całej długości (bez podparć pośrednich)
+      statyka: { rozpietosc: dlWzdluz, szerokoscObciazenia: rozstaw, kat: 0, uzytkowe: true },
     });
   });
 

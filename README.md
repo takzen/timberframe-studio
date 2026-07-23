@@ -2,7 +2,7 @@
 
 **Parametric CAD for small timber structures** — timber-frame cabins (35–60 m²), decks, carports and lean-to roofs. Draw a floor plan, pick real lumber from a catalogue, and get a live 3D model with a bill of materials and a cost estimate.
 
-> ⚠️ **Work in progress.** This is an early prototype built in a single afternoon. It works end to end, but plenty is missing and rough — see [Status](#status). Not a structural engineering tool: it does **no** load calculations and is not a substitute for a qualified designer.
+> ⚠️ **Work in progress.** This is an early prototype. It works end to end, but plenty is missing and rough — see [Status](#status). The structural check is an **indicative** first-pass estimate to catch gross under-sizing — it is **not** a substitute for a qualified designer or a stamped structural design.
 
 ![Timber-frame cabin: 2D plan, live 3D preview and bill of materials](docs/domek.png)
 
@@ -25,6 +25,7 @@ Every primitive expands into **real individual members** — each stud, rafter a
 - **Lumber catalogue** — commercial cross-sections, seven species/grades with per-m³ prices, eight sheathing materials with per-m² prices.
 - **Bill of materials and cost** — grouped by member, section and species, with piece counts, cut lengths, running metres, m², m³ and cost. Fasteners (post bases, anchors, angle brackets, structural screws) are added from per-connection rules.
 - **Mitred ends** — knee braces get their end faces cut to the angle derived from their pitch, so they seat flat against post and beam. The bill of materials orders the longer edge, not the centreline.
+- **Indicative structural check (Eurocode 5)** — rafters and deck joists are checked as simply-supported bending members: self-weight from geometry, snow load by Polish zone, bending / shear / deflection utilisation with a red/amber/green verdict that updates live as you resize a section. Explicitly bounded — see [Status](#status).
 - **Persistence** — the project autosaves to `localStorage`; export/import as JSON, export the bill of materials as CSV.
 - **Starter templates** — 6×7 m timber-frame cabin with a covered deck, 4×6 m carport, 3×3 m carport.
 
@@ -78,7 +79,9 @@ src/
 
 ## Status
 
-Working: drawing, dragging and reshaping, the catalogue, the bill of materials with costs, persistence, both roof types, walls with openings, braces with mitred ends.
+Working: drawing, dragging and reshaping, the catalogue, the bill of materials with costs, persistence, both roof types, walls with openings, braces with mitred ends, indicative EC5 checks for rafters and joists.
+
+The structural check is deliberately narrow (Phase 1): **simply-supported, single-span bending members only** (rafters, deck joists), dead + snow/imposed, combination 1.35·G + 1.5·Q. It does **not** yet cover posts and buckling, the load path down through beams and columns, wind (uplift matters for light carports), connections, global stability, or foundations — and deck joists are checked at their full clear span, so a deck with no intermediate bearer will correctly read as overloaded. Treat a green verdict as "not grossly under-sized", not "approved".
 
 Not there yet:
 

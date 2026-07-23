@@ -37,7 +37,7 @@ export default function App() {
           </div>
         </section>
       </main>
-      <PanelBoczny elementy={widoczne} />
+      <PanelBoczny elementy={widoczne} wszystkie={wszystkie} />
     </div>
   );
 }

@@ -31,6 +31,24 @@ export interface Element {
   gatunek?: string;
   /** Id materiału poszycia z katalogu (płyty, blacha, papa). */
   material?: string;
+  /**
+   * Dane do orientacyjnego sprawdzenia nośności (Etap 1: elementy zginane
+   * wolnopodparte). Element bez tego pola jest pomijany w analizie statycznej.
+   */
+  statyka?: DaneStatyczne;
+}
+
+export interface DaneStatyczne {
+  /** Rozpiętość przęsła między podporami [m] (dla krokwi — długość połaci). */
+  rozpietosc: number;
+  /** Szerokość obciążenia = rozstaw elementów [m] (pole tributarne). */
+  szerokoscObciazenia: number;
+  /** Kąt nachylenia [°] — 0 dla elementów poziomych. */
+  kat: number;
+  /** Id pokrycia obciążającego element (dach) — do ciężaru stałego. */
+  pokrycie?: string;
+  /** true = element stropu/podestu (obciążenie użytkowe zamiast śniegu). */
+  uzytkowe?: boolean;
 }
 
 /** Pola wspólne wszystkich prymitywów. */
