@@ -2,6 +2,8 @@
 
 **Parametric CAD for small timber structures** — timber-frame cabins (35–60 m²), decks, carports and lean-to roofs. Draw a floor plan, pick real lumber from a catalogue, and get a live 3D model with a bill of materials and a cost estimate.
 
+**▶ Try it live: https://takzen.github.io/timberframe-studio/** &nbsp;·&nbsp; runs entirely in the browser, PL/EN toggle in the toolbar.
+
 > ⚠️ **Work in progress — indicative tool, not a structural design.** This is an early prototype. The structural check is a first-pass estimate to catch gross under-sizing; it is **not** a substitute for a qualified/licensed engineer or a stamped design, and a real build must be checked and approved by one. Full terms — including exactly what the check does and does not cover — are in **[DISCLAIMER.md](DISCLAIMER.md)** (English + Polish). See also [Status](#status).
 
 ![Timber-frame cabin: 2D plan, live 3D preview and bill of materials](docs/domek.png)
