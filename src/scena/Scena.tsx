@@ -1,6 +1,7 @@
 import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, Grid, OrbitControls } from '@react-three/drei';
+import type { Status } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
 import { ElementMesh } from './ElementMesh';
 import { useStore } from '../store';
@@ -23,7 +24,13 @@ function srodekRzutu(elementy: Element[]): [number, number, number] {
   return [(minX + maxX) / 2, (minY + maxY) / 2, Math.max(maxX - minX, maxY - minY, 4)];
 }
 
-export function Scena({ elementy }: { elementy: Element[] }) {
+export function Scena({
+  elementy,
+  wytezenie,
+}: {
+  elementy: Element[];
+  wytezenie: Map<string, Status> | null;
+}) {
   const pokazSiatke = useStore((s) => s.pokazSiatke);
   const zaznaczony = useStore((s) => s.zaznaczony);
   const zaznacz = useStore((s) => s.zaznacz);
@@ -65,6 +72,7 @@ export function Scena({ elementy }: { elementy: Element[] }) {
           key={el.id}
           element={el}
           podswietlony={el.zPrymitywu === zaznaczony}
+          wytezenie={wytezenie?.get(el.id)}
           onWybor={zaznacz}
         />
       ))}

@@ -25,6 +25,8 @@ export interface Sprawdzenie {
 }
 
 export interface WynikElementu {
+  /** Id elementu (przed grupowaniem) — do kolorowania rysunku i wizualizacji. */
+  id?: string;
   /** Reprezentatywny opis, np. "krokiew 60×160". */
   opis: string;
   nazwa: string;

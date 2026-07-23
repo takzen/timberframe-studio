@@ -31,6 +31,8 @@ interface Stan {
   trybWidoku: TrybWidoku;
   widoczneGrupy: Record<Grupa, boolean>;
   pokazSiatke: boolean;
+  /** Koloruje przeciążone elementy na rysunku i w 3D. */
+  pokazWytezenie: boolean;
 
   /** Ustawienia orientacyjnej analizy statycznej. */
   statyka: UstawieniaStatyki;
@@ -52,6 +54,7 @@ interface Stan {
   ustawTryb: (t: TrybWidoku) => void;
   przelaczGrupe: (g: Grupa) => void;
   przelaczSiatke: () => void;
+  przelaczWytezenie: () => void;
   ustawStrefeSniegu: (strefa: number) => void;
   ustawSniegSk: (sk: number) => void;
   ustawKlaseUzytkowania: (k: KlasaUzytkowania) => void;
@@ -90,6 +93,7 @@ export const useStore = create<Stan>()(
         trybWidoku: 'pelny',
         widoczneGrupy: { slupy: true, belki: true, podesty: true, dachy: true, sciany: true },
         pokazSiatke: true,
+        pokazWytezenie: true,
         statyka: { strefaSniegu: 2, sniegSk: 0.9, klasaUzytkowania: 2, obciazenieUzytkowe: 2.0 },
         historia: [[]],
         indeksHistorii: 0,
@@ -147,6 +151,7 @@ export const useStore = create<Stan>()(
         przelaczGrupe: (g) =>
           set((s) => ({ widoczneGrupy: { ...s.widoczneGrupy, [g]: !s.widoczneGrupy[g] } })),
         przelaczSiatke: () => set((s) => ({ pokazSiatke: !s.pokazSiatke })),
+        przelaczWytezenie: () => set((s) => ({ pokazWytezenie: !s.pokazWytezenie })),
         ustawStrefeSniegu: (strefa) =>
           set((s) => ({
             statyka: { ...s.statyka, strefaSniegu: strefa, sniegSk: znajdzStrefe(strefa).sk },
@@ -203,6 +208,7 @@ export const useStore = create<Stan>()(
         trybWidoku: s.trybWidoku,
         widoczneGrupy: s.widoczneGrupy,
         pokazSiatke: s.pokazSiatke,
+        pokazWytezenie: s.pokazWytezenie,
         statyka: s.statyka,
       }),
       onRehydrateStorage: () => (stan) => {

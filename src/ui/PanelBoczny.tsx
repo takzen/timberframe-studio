@@ -1,3 +1,4 @@
+import type { WynikElementu } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
 import { eksportujCSV, zestawienie } from '../model/materialy';
 import { GRUPY, useStore } from '../store';
@@ -5,7 +6,13 @@ import { PanelAnalizy } from './PanelAnalizy';
 import { PanelWlasciwosci } from './PanelWlasciwosci';
 import { TabelaMaterialowa } from './TabelaMaterialowa';
 
-export function PanelBoczny({ elementy, wszystkie }: { elementy: Element[]; wszystkie: Element[] }) {
+export function PanelBoczny({
+  elementy,
+  wyniki,
+}: {
+  elementy: Element[];
+  wyniki: WynikElementu[];
+}) {
   const nazwa = useStore((s) => s.nazwa);
   const trybWidoku = useStore((s) => s.trybWidoku);
   const widoczneGrupy = useStore((s) => s.widoczneGrupy);
@@ -49,7 +56,7 @@ export function PanelBoczny({ elementy, wszystkie }: { elementy: Element[]; wszy
         ))}
       </section>
 
-      {wszystkie.length > 0 && <PanelAnalizy elementy={wszystkie} />}
+      {wyniki.length > 0 && <PanelAnalizy wyniki={wyniki} />}
 
       <section className="rozciagnij">
         <h2>

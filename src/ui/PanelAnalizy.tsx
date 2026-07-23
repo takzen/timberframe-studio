@@ -1,8 +1,5 @@
-import { useMemo } from 'react';
-import { analiza } from '../model/statyka/analiza';
 import { STREFY_SNIEGU } from '../model/statyka/obciazenia';
 import type { Status, WynikElementu } from '../model/statyka/typy';
-import type { Element } from '../model/typy';
 import { useStore } from '../store';
 import { PoleLiczba, PoleWybor } from './pola';
 
@@ -31,14 +28,15 @@ function Wiersz({ w }: { w: WynikElementu }) {
   );
 }
 
-export function PanelAnalizy({ elementy }: { elementy: Element[] }) {
+export function PanelAnalizy({ wyniki }: { wyniki: WynikElementu[] }) {
   const ustawienia = useStore((s) => s.statyka);
+  const pokazWytezenie = useStore((s) => s.pokazWytezenie);
   const ustawStrefeSniegu = useStore((s) => s.ustawStrefeSniegu);
   const ustawSniegSk = useStore((s) => s.ustawSniegSk);
   const ustawKlaseUzytkowania = useStore((s) => s.ustawKlaseUzytkowania);
   const ustawObciazenieUzytkowe = useStore((s) => s.ustawObciazenieUzytkowe);
+  const przelaczWytezenie = useStore((s) => s.przelaczWytezenie);
 
-  const wyniki = useMemo(() => analiza(elementy, ustawienia), [elementy, ustawienia]);
   const najgorszy = wyniki[0];
 
   return (
@@ -80,49 +78,48 @@ export function PanelAnalizy({ elementy }: { elementy: Element[] }) {
         />
       </div>
 
-      {wyniki.length === 0 ? (
-        <p className="opis">
-          Brak elementów do sprawdzenia. Dodaj dach lub podest — krokwie i legary są
-          sprawdzane automatycznie.
-        </p>
-      ) : (
-        <>
-          <div className={`werdykt werdykt-${najgorszy.status}`}>
-            <span className="kropka" style={{ background: KROPKA[najgorszy.status] }} />
-            {najgorszy.status === 'przekroczone'
-              ? `Przekroczona nośność: ${najgorszy.nazwa} ${najgorszy.przekrojMm} (${Math.round(
-                  najgorszy.maksWykorzystanie * 100,
-                )}%)`
-              : najgorszy.status === 'uwaga'
-                ? `Najbardziej wytężony: ${najgorszy.nazwa} ${najgorszy.przekrojMm} (${Math.round(
-                    najgorszy.maksWykorzystanie * 100,
-                  )}%)`
-                : `Wszystko w normie — zapas ${100 - Math.round(najgorszy.maksWykorzystanie * 100)}%`}
-          </div>
+      <div className={`werdykt werdykt-${najgorszy.status}`}>
+        <span className="kropka" style={{ background: KROPKA[najgorszy.status] }} />
+        {najgorszy.status === 'przekroczone'
+          ? `Przekroczona nośność: ${najgorszy.nazwa} ${najgorszy.przekrojMm} (${Math.round(
+              najgorszy.maksWykorzystanie * 100,
+            )}%)`
+          : najgorszy.status === 'uwaga'
+            ? `Najbardziej wytężony: ${najgorszy.nazwa} ${najgorszy.przekrojMm} (${Math.round(
+                najgorszy.maksWykorzystanie * 100,
+              )}%)`
+            : `Wszystko w normie — zapas ${100 - Math.round(najgorszy.maksWykorzystanie * 100)}%`}
+      </div>
 
-          <table className="materialy analiza">
-            <thead>
-              <tr>
-                <th>element</th>
-                <th className="num">wykorzystanie</th>
-              </tr>
-            </thead>
-            <tbody>
-              {wyniki.map((w) => (
-                <Wiersz key={`${w.nazwa}-${w.przekrojMm}-${w.rozpietosc}`} w={w} />
-              ))}
-            </tbody>
-          </table>
+      <label className="ptaszek podswietl">
+        <input type="checkbox" checked={pokazWytezenie} onChange={przelaczWytezenie} />
+        Podświetl na rysunku i w 3D
+        <span className="legenda">
+          <span className="kropka" style={{ background: KROPKA.uwaga }} /> ≥90%
+          <span className="kropka" style={{ background: KROPKA.przekroczone }} /> &gt;100%
+        </span>
+      </label>
 
-          <p className="zastrzezenie">
-            Szacunek orientacyjny wg PN-EN 1995-1-1: krokwie i legary (zginanie
-            wolnopodparte), belki (ciąg przęseł), słupy (ściskanie z wyboczeniem),
-            kombinacja 1,35·G + 1,5·Q. <strong>Bez</strong> wiatru, połączeń, stateczności
-            globalnej, rozporu i fundamentów. Nie zastępuje projektu konstrukcyjnego —
-            zob. DISCLAIMER.
-          </p>
-        </>
-      )}
+      <table className="materialy analiza">
+        <thead>
+          <tr>
+            <th>element</th>
+            <th className="num">wykorzystanie</th>
+          </tr>
+        </thead>
+        <tbody>
+          {wyniki.map((w) => (
+            <Wiersz key={`${w.nazwa}-${w.przekrojMm}-${w.rozpietosc}`} w={w} />
+          ))}
+        </tbody>
+      </table>
+
+      <p className="zastrzezenie">
+        Szacunek orientacyjny wg PN-EN 1995-1-1: krokwie i legary (zginanie wolnopodparte),
+        belki (ciąg przęseł), słupy (ściskanie z wyboczeniem), kombinacja 1,35·G + 1,5·Q.
+        <strong> Bez</strong> wiatru, połączeń, stateczności globalnej, rozporu i fundamentów.
+        Nie zastępuje projektu konstrukcyjnego — zob. DISCLAIMER.
+      </p>
     </section>
   );
 }

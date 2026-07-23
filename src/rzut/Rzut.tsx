@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { opisTypu } from '../model/domyslne';
+import type { Status } from '../model/statyka/typy';
 import type { PrymitywDef, Vec2 } from '../model/typy';
 import { useStore } from '../store';
 import {
@@ -43,7 +44,7 @@ interface Wskaznik {
   ruszony: boolean;
 }
 
-export function Rzut() {
+export function Rzut({ wytezenie }: { wytezenie: Map<string, Status> | null }) {
   const kontener = useRef<HTMLDivElement>(null);
   const [rozmiar, setRozmiar] = useState<Rozmiar>({ w: 800, h: 600 });
   const [widok, setWidok] = useState<Widok>({ cx: 3, cy: 3, skala: 55 });
@@ -502,19 +503,23 @@ export function Rzut() {
       >
         <g transform={transformGrupy(widok, rozmiar)}>
           {linieSiatki()}
-          {prymitywy.map((def) => (
-            <KsztaltRzutu
-              key={def.id}
-              def={def}
-              stan={
-                def.id === zaznaczony
-                  ? 'zaznaczony'
-                  : def.id === nadElementem
-                    ? 'pod-kursorem'
-                    : 'zwykly'
-              }
-            />
-          ))}
+          {prymitywy.map((def) => {
+            const st = wytezenie?.get(def.id);
+            return (
+              <KsztaltRzutu
+                key={def.id}
+                def={def}
+                stan={
+                  def.id === zaznaczony
+                    ? 'zaznaczony'
+                    : def.id === nadElementem
+                      ? 'pod-kursorem'
+                      : 'zwykly'
+                }
+                wytezenie={st === 'uwaga' || st === 'przekroczone' ? st : undefined}
+              />
+            );
+          })}
           {podglad()}
         </g>
 

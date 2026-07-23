@@ -630,6 +630,25 @@ table.analiza {
   color: #ef8078;
 }
 
+.ptaszek.podswietl {
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.legenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--tekst-slaby);
+}
+
+.legenda .kropka {
+  margin: 0 1px 0 6px;
+}
+
 @media (max-width: 1200px) {
   .uklad {
     grid-template-columns: 1fr 320px;

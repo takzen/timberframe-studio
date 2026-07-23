@@ -1,8 +1,15 @@
 import { useEffect, useMemo } from 'react';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { znajdzGatunek, znajdzPoszycie } from '../model/katalog';
+import type { Status } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
 import { geometriaZeScieciem } from './geometriaElementu';
+
+/** Barwy wytężenia — tylko elementy problematyczne, reszta zostaje drewnem. */
+const KOLOR_WYTEZENIA: Partial<Record<Status, { kolor: string; emissive: string }>> = {
+  uwaga: { kolor: '#d99a2b', emissive: '#5a3d00' },
+  przekroczone: { kolor: '#d9463c', emissive: '#5a0f0a' },
+};
 
 /** Barwa i chropowatość z katalogu: materiał poszycia ma pierwszeństwo przed gatunkiem. */
 export function wygladElementu(element: Element) {
@@ -22,10 +29,12 @@ export function wygladElementu(element: Element) {
 export function ElementMesh({
   element,
   podswietlony,
+  wytezenie,
   onWybor,
 }: {
   element: Element;
   podswietlony: boolean;
+  wytezenie?: Status;
   onWybor: (id: string) => void;
 }) {
   const { pozycja, kwaternion, dlugosc } = useMemo(() => {
@@ -66,6 +75,12 @@ export function ElementMesh({
   useEffect(() => () => geometriaSkosna?.dispose(), [geometriaSkosna]);
 
   const { kolor, roughness } = wygladElementu(element);
+  const wyt = wytezenie ? KOLOR_WYTEZENIA[wytezenie] : undefined;
+
+  // pierwszeństwo: zaznaczenie > wytężenie (uwaga/przekroczone) > materiał
+  const barwa = podswietlony ? '#ffb861' : (wyt?.kolor ?? kolor);
+  const emissive = podswietlony ? '#8a4d00' : (wyt?.emissive ?? '#000000');
+  const emissiveIntensity = podswietlony ? 0.45 : wyt ? 0.55 : 0;
 
   return (
     <mesh
@@ -83,9 +98,9 @@ export function ElementMesh({
         <boxGeometry args={[dlugosc, element.przekroj[0], element.przekroj[1]]} />
       )}
       <meshStandardMaterial
-        color={podswietlony ? '#ffb861' : kolor}
-        emissive={podswietlony ? '#8a4d00' : '#000000'}
-        emissiveIntensity={podswietlony ? 0.45 : 0}
+        color={barwa}
+        emissive={emissive}
+        emissiveIntensity={emissiveIntensity}
         roughness={roughness}
       />
     </mesh>

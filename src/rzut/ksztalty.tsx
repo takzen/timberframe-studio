@@ -101,17 +101,32 @@ function strzalkaSpadku(def: Extract<PrymitywDef, { typ: 'dachJednospadowy' }>) 
 }
 
 export type StanKsztaltu = 'zwykly' | 'pod-kursorem' | 'zaznaczony';
+export type StatusWytezenia = 'uwaga' | 'przekroczone';
 
-export function KsztaltRzutu({ def, stan }: { def: PrymitywDef; stan: StanKsztaltu }) {
+export function KsztaltRzutu({
+  def,
+  stan,
+  wytezenie,
+}: {
+  def: PrymitywDef;
+  stan: StanKsztaltu;
+  wytezenie?: StatusWytezenia;
+}) {
   const z = stan === 'zaznaczony';
   const pod = stan === 'pod-kursorem';
-  const obrys = z ? '#e0a75c' : pod ? '#b9c3cd' : '#7d8791';
+  // pierwszeństwo: zaznaczenie > wytężenie (uwaga/przekroczone) > stan zwykły
+  const barwaWyt = wytezenie === 'przekroczone' ? '#e0645a' : wytezenie === 'uwaga' ? '#e0b04a' : null;
+  const obrys = z ? '#e0a75c' : (barwaWyt ?? (pod ? '#b9c3cd' : '#7d8791'));
   const wypelnienie = z
     ? 'rgba(224,167,92,0.28)'
-    : pod
-      ? 'rgba(185,195,205,0.24)'
-      : 'rgba(125,135,145,0.16)';
-  const gruboscObrysu = z ? 2.4 : pod ? 1.9 : 1.4;
+    : wytezenie === 'przekroczone'
+      ? 'rgba(224,100,90,0.26)'
+      : wytezenie === 'uwaga'
+        ? 'rgba(224,176,74,0.24)'
+        : pod
+          ? 'rgba(185,195,205,0.24)'
+          : 'rgba(125,135,145,0.16)';
+  const gruboscObrysu = z ? 2.4 : barwaWyt ? 2.2 : pod ? 1.9 : 1.4;
 
   switch (def.typ) {
     case 'sciana': {

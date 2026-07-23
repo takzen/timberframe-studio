@@ -119,6 +119,7 @@ export function zbudujWynik(
     : { nazwa: '—', wykorzystanie: 0 };
   const przekrojMm = `${mm(el.przekroj[0])}×${mm(el.przekroj[1])}`;
   return {
+    id: el.id,
     opis: `${el.nazwa} ${przekrojMm}`,
     nazwa: el.nazwa,
     przekrojMm,
