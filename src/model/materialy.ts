@@ -138,6 +138,7 @@ export function zestawienie(elementy: Element[]): Zestawienie {
   const szt = new Map<string, number>();
 
   for (const el of elementy) {
+    if (el.beton) continue; // beton wyceniany osobno w module fundamentów
     const przekrojCm = opisPrzekroju(el.przekroj);
     const { opis, plytowy, cena } = opisMaterialu(el);
     const klucz = `${el.kategoria}|${el.nazwa}|${przekrojCm}|${opis}`;

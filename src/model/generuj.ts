@@ -2,6 +2,7 @@ import type { Element, PrymitywDef } from './typy';
 import { generujBelke } from './generatory/belka';
 import { generujDachDwuspadowy } from './generatory/dachDwuspadowy';
 import { generujDachJednospadowy } from './generatory/dachJednospadowy';
+import { generujPlyte } from './generatory/plyta';
 import { generujPodest } from './generatory/podest';
 import { generujSciane } from './generatory/sciana';
 import { generujSlup } from './generatory/slup';
@@ -23,6 +24,8 @@ export function generujPrymityw(def: PrymitywDef): Element[] {
       return generujDachDwuspadowy(def);
     case 'sciana':
       return generujSciane(def);
+    case 'plyta':
+      return generujPlyte(def);
   }
 }
 

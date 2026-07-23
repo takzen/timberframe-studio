@@ -1,17 +1,21 @@
+import type { AnalizaFundamentow } from '../model/fundamenty/typy';
 import type { WynikElementu } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
 import { eksportujCSV, zestawienie } from '../model/materialy';
 import { GRUPY, useStore } from '../store';
 import { PanelAnalizy } from './PanelAnalizy';
+import { PanelFundamenty } from './PanelFundamenty';
 import { PanelWlasciwosci } from './PanelWlasciwosci';
 import { TabelaMaterialowa } from './TabelaMaterialowa';
 
 export function PanelBoczny({
   elementy,
   wyniki,
+  fundamenty,
 }: {
   elementy: Element[];
   wyniki: WynikElementu[];
+  fundamenty: AnalizaFundamentow;
 }) {
   const nazwa = useStore((s) => s.nazwa);
   const trybWidoku = useStore((s) => s.trybWidoku);
@@ -57,6 +61,10 @@ export function PanelBoczny({
       </section>
 
       {wyniki.length > 0 && <PanelAnalizy wyniki={wyniki} />}
+
+      {(fundamenty.stopy.length > 0 || fundamenty.plyty.length > 0) && (
+        <PanelFundamenty analiza={fundamenty} />
+      )}
 
       <section className="rozciagnij">
         <h2>

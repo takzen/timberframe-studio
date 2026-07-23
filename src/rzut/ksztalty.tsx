@@ -9,6 +9,7 @@ export function obrysProstokatny(def: PrymitywDef): { pozycja: Vec2; wymiar: Vec
     case 'podest':
     case 'dachJednospadowy':
     case 'dachDwuspadowy':
+    case 'plyta':
       return { pozycja: def.pozycja, wymiar: def.wymiar };
     case 'slup':
       return {
@@ -267,6 +268,23 @@ export function KsztaltRzutu({
           />
           <line {...kalenica} strokeWidth={2.2} {...KRESKA} />
         </g>
+      );
+    }
+    case 'plyta': {
+      const [x, y] = def.pozycja;
+      const [dx, dy] = def.wymiar;
+      const barwa = z ? obrys : (barwaWyt ?? '#8f9296');
+      return (
+        <rect
+          x={x}
+          y={y}
+          width={dx}
+          height={dy}
+          fill={z ? wypelnienie : 'rgba(140,144,150,0.20)'}
+          stroke={barwa}
+          strokeWidth={gruboscObrysu}
+          {...KRESKA}
+        />
       );
     }
   }

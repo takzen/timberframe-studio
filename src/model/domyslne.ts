@@ -30,6 +30,7 @@ export const TYPY: OpisTypu[] = [
     rysowanie: 'prostokat',
     skrot: '6',
   },
+  { typ: 'plyta', etykieta: 'Płyta fund.', prefiks: 'F', rysowanie: 'prostokat', skrot: '8' },
 ];
 
 export const opisTypu = (typ: TypPrymitywu): OpisTypu =>
@@ -146,5 +147,14 @@ export function nowyPrymityw(
         gatunek: 'sosna-c24',
       };
     }
+    case 'plyta':
+      return {
+        ...baza,
+        typ: 'plyta',
+        ...prostokat(a, b),
+        grubosc: 0.2,
+        z: 0,
+        klasaBetonu: 'c16-20',
+      };
   }
 }

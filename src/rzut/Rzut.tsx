@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { opisTypu } from '../model/domyslne';
+import type { WynikStopy } from '../model/fundamenty/typy';
 import type { Status } from '../model/statyka/typy';
 import type { PrymitywDef, Vec2 } from '../model/typy';
 import { useStore } from '../store';
@@ -44,7 +45,19 @@ interface Wskaznik {
   ruszony: boolean;
 }
 
-export function Rzut({ wytezenie }: { wytezenie: Map<string, Status> | null }) {
+const BARWA_STOPY: Record<Status, string> = {
+  ok: '#8f9296',
+  uwaga: '#e0b04a',
+  przekroczone: '#e0645a',
+};
+
+export function Rzut({
+  wytezenie,
+  stopy,
+}: {
+  wytezenie: Map<string, Status> | null;
+  stopy: WynikStopy[];
+}) {
   const kontener = useRef<HTMLDivElement>(null);
   const [rozmiar, setRozmiar] = useState<Rozmiar>({ w: 800, h: 600 });
   const [widok, setWidok] = useState<Widok>({ cx: 3, cy: 3, skala: 55 });
@@ -503,6 +516,19 @@ export function Rzut({ wytezenie }: { wytezenie: Map<string, Status> | null }) {
       >
         <g transform={transformGrupy(widok, rozmiar)}>
           {linieSiatki()}
+          {stopy.map((s) => (
+            <rect
+              key={`stopa-${s.idSlupa}`}
+              x={s.punkt[0] - s.bok / 2}
+              y={s.punkt[1] - s.bok / 2}
+              width={s.bok}
+              height={s.bok}
+              fill="rgba(140,144,150,0.22)"
+              stroke={BARWA_STOPY[s.status]}
+              strokeWidth={1.4}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
           {prymitywy.map((def) => {
             const st = wytezenie?.get(def.id);
             return (

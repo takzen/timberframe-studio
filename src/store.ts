@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nowyPrymityw, opisTypu } from './model/domyslne';
+import type { UstawieniaFundamentow } from './model/fundamenty/typy';
 import { znajdzStrefe } from './model/statyka/obciazenia';
 import type { KlasaUzytkowania, UstawieniaStatyki } from './model/statyka/typy';
 import type { Grupa, PrymitywDef, TypPrymitywu, Vec2 } from './model/typy';
@@ -14,6 +15,7 @@ export const GRUPY: { id: Grupa; etykieta: string }[] = [
   { id: 'podesty', etykieta: 'Podesty / tarasy' },
   { id: 'sciany', etykieta: 'Ściany' },
   { id: 'dachy', etykieta: 'Dachy' },
+  { id: 'fundamenty', etykieta: 'Fundamenty' },
 ];
 
 const MAKS_HISTORII = 60;
@@ -36,6 +38,8 @@ interface Stan {
 
   /** Ustawienia orientacyjnej analizy statycznej. */
   statyka: UstawieniaStatyki;
+  /** Ustawienia doboru fundamentów. */
+  fundamenty: UstawieniaFundamentow;
 
   historia: PrymitywDef[][];
   indeksHistorii: number;
@@ -59,6 +63,7 @@ interface Stan {
   ustawSniegSk: (sk: number) => void;
   ustawKlaseUzytkowania: (k: KlasaUzytkowania) => void;
   ustawObciazenieUzytkowe: (q: number) => void;
+  ustawFundamenty: (zmiany: Partial<UstawieniaFundamentow>) => void;
   cofnij: () => void;
   ponow: () => void;
   wczytaj: (nazwa: string, prymitywy: PrymitywDef[]) => void;
@@ -91,10 +96,24 @@ export const useStore = create<Stan>()(
         poziomRoboczy: 2.6,
         skokSiatki: 0.1,
         trybWidoku: 'pelny',
-        widoczneGrupy: { slupy: true, belki: true, podesty: true, dachy: true, sciany: true },
+        widoczneGrupy: {
+          slupy: true,
+          belki: true,
+          podesty: true,
+          dachy: true,
+          sciany: true,
+          fundamenty: true,
+        },
         pokazSiatke: true,
         pokazWytezenie: true,
         statyka: { strefaSniegu: 2, sniegSk: 0.9, klasaUzytkowania: 2, obciazenieUzytkowe: 2.0 },
+        fundamenty: {
+          nosnoscGruntu: 150,
+          klasaBetonu: 'c16-20',
+          glebokoscPrzemarzania: 1.0,
+          minStopa: 0.4,
+          gruboscStopy: 0.4,
+        },
         historia: [[]],
         indeksHistorii: 0,
 
@@ -161,6 +180,8 @@ export const useStore = create<Stan>()(
           set((s) => ({ statyka: { ...s.statyka, klasaUzytkowania } })),
         ustawObciazenieUzytkowe: (obciazenieUzytkowe) =>
           set((s) => ({ statyka: { ...s.statyka, obciazenieUzytkowe } })),
+        ustawFundamenty: (zmiany) =>
+          set((s) => ({ fundamenty: { ...s.fundamenty, ...zmiany } })),
 
         cofnij: () => {
           const { historia, indeksHistorii } = get();
@@ -210,6 +231,7 @@ export const useStore = create<Stan>()(
         pokazSiatke: s.pokazSiatke,
         pokazWytezenie: s.pokazWytezenie,
         statyka: s.statyka,
+        fundamenty: s.fundamenty,
       }),
       onRehydrateStorage: () => (stan) => {
         // historia startuje od wczytanego projektu, nie od pustego

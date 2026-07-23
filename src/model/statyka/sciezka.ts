@@ -125,12 +125,26 @@ function sprawdzBelke(
   return { wynik, reakcjePodpor };
 }
 
+/** Słup z policzoną siłą osiową — do sprawdzenia i do doboru fundamentu. */
+export interface SlupObciazony {
+  id: string;
+  nazwa: string;
+  punkt: Vec2;
+  przekroj: [number, number];
+  gatunek?: string;
+  dlugosc: number;
+  /** Siła osiowa obliczeniowa N_d [kN] (z ciężarem własnym słupa). */
+  Nd: number;
+}
+
 /**
- * Pełna analiza ścieżki obciążeń: zwraca wyniki belek i słupów.
- * Reakcje krokwi trafiają na najbliższą belkę (a jeśli brak — na słup),
- * reakcje belek na słupy pod ich podporami.
+ * Rozwiązuje ścieżkę obciążeń: reakcje krokwi → belki → słupy. Zwraca wyniki
+ * sprawdzeń belek i słupów oraz obciążenia osiowe słupów (do fundamentów).
  */
-export function analizaSciezki(elementy: Element[], u: UstawieniaStatyki): WynikElementu[] {
+export function rozwiazSciezke(
+  elementy: Element[],
+  u: UstawieniaStatyki,
+): { wyniki: WynikElementu[]; slupy: SlupObciazony[] } {
   const belki = elementy.filter((e) => /^belka/.test(e.nazwa));
   const slupy = elementy.filter((e) => /^słup/.test(e.nazwa));
   const slupPunkt = (s: Element): Vec2 => [s.od[0], s.od[1]];
@@ -190,7 +204,8 @@ export function analizaSciezki(elementy: Element[], u: UstawieniaStatyki): Wynik
     for (const rp of reakcjePodpor) dodajDoSlupa(rp.punkt, rp.Rg, rp.Rq);
   }
 
-  // 3) sprawdź słupy na wyboczenie
+  // 3) sprawdź słupy na wyboczenie i zbierz ich obciążenia osiowe
+  const slupyObc: SlupObciazony[] = [];
   for (const s of slupy) {
     const { Ng, Nq } = osioweSlupa.get(s.id)!;
     const dlugosc = Math.abs(s.do[2] - s.od[2]) || 2.4;
@@ -207,7 +222,21 @@ export function analizaSciezki(elementy: Element[], u: UstawieniaStatyki): Wynik
     });
     const Nd = 1.35 * (Ng + gWlasny) + 1.5 * Nq;
     wyniki.push(zbudujWynik(s, spr, dlugosc, `N=${Nd.toFixed(1)} kN · ${mech.klasa}`));
+    slupyObc.push({
+      id: s.id,
+      nazwa: s.nazwa,
+      punkt: slupPunkt(s),
+      przekroj: [s.przekroj[0], s.przekroj[1]],
+      gatunek: s.gatunek,
+      dlugosc,
+      Nd,
+    });
   }
 
-  return wyniki;
+  return { wyniki, slupy: slupyObc };
+}
+
+/** Wyniki sprawdzeń belek i słupów (bez obciążeń — do tabeli w panelu). */
+export function analizaSciezki(elementy: Element[], u: UstawieniaStatyki): WynikElementu[] {
+  return rozwiazSciezke(elementy, u).wyniki;
 }

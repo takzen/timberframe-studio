@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { znajdzGatunek, znajdzPoszycie } from '../model/katalog';
+import { znajdzBeton, znajdzGatunek, znajdzPoszycie } from '../model/katalog';
 import type { Status } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
 import { geometriaZeScieciem } from './geometriaElementu';
@@ -11,8 +11,9 @@ const KOLOR_WYTEZENIA: Partial<Record<Status, { kolor: string; emissive: string 
   przekroczone: { kolor: '#d9463c', emissive: '#5a0f0a' },
 };
 
-/** Barwa i chropowatość z katalogu: materiał poszycia ma pierwszeństwo przed gatunkiem. */
+/** Barwa i chropowatość z katalogu: beton > poszycie > gatunek drewna. */
 export function wygladElementu(element: Element) {
+  if (element.beton) return { kolor: znajdzBeton(element.beton).kolor, roughness: 0.9 };
   if (element.material) {
     const m = znajdzPoszycie(element.material);
     return { kolor: m.kolor, roughness: m.roughness };

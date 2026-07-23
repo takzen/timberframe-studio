@@ -1,4 +1,5 @@
 import {
+  BETONY,
   GATUNKI,
   POSZYCIA,
   PRZEKROJE,
@@ -81,6 +82,17 @@ function WyborPoszycia({
         ...POSZYCIA.map((p) => ({ wartosc: p.id, etykieta: `${p.nazwa} · ${p.cenaM2} zł/m²` })),
       ]}
       onZmiana={(v) => onZmiana(v === 'brak' ? undefined : v)}
+    />
+  );
+}
+
+function WyborBetonu({ wartosc, onZmiana }: { wartosc?: string; onZmiana: (v: string) => void }) {
+  return (
+    <PoleWybor
+      etykieta="Klasa betonu"
+      wartosc={wartosc ?? 'c16-20'}
+      opcje={BETONY.map((b) => ({ wartosc: b.id, etykieta: `${b.nazwa} · ${b.cenaM3} zł/m³` }))}
+      onZmiana={onZmiana}
     />
   );
 }
@@ -556,6 +568,36 @@ function poleWgTypu(def: PrymitywDef, zm: (z: Partial<PrymitywDef>) => void) {
             dozwolonyBrak={false}
             onZmiana={(poszycie) => zm({ poszycie })}
           />
+        </>
+      );
+    case 'plyta':
+      return (
+        <>
+          <PoleLiczba
+            etykieta="Szerokość X"
+            wartosc={def.wymiar[0]}
+            min={0.3}
+            onZmiana={(v) => zm({ wymiar: [v, def.wymiar[1]] })}
+          />
+          <PoleLiczba
+            etykieta="Głębokość Y"
+            wartosc={def.wymiar[1]}
+            min={0.3}
+            onZmiana={(v) => zm({ wymiar: [def.wymiar[0], v] })}
+          />
+          <PoleLiczba
+            etykieta="Grubość"
+            wartosc={def.grubosc}
+            krok={0.05}
+            min={0.1}
+            onZmiana={(grubosc) => zm({ grubosc })}
+          />
+          <PoleLiczba
+            etykieta="Poziom góry"
+            wartosc={def.z ?? 0}
+            onZmiana={(z) => zm({ z })}
+          />
+          <WyborBetonu wartosc={def.klasaBetonu} onZmiana={(klasaBetonu) => zm({ klasaBetonu })} />
         </>
       );
   }

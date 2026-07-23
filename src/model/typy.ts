@@ -3,8 +3,8 @@
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
 
-export type Kategoria = 'konstrukcja' | 'poszycie';
-export type Grupa = 'slupy' | 'belki' | 'podesty' | 'dachy' | 'sciany';
+export type Kategoria = 'konstrukcja' | 'poszycie' | 'fundament';
+export type Grupa = 'slupy' | 'belki' | 'podesty' | 'dachy' | 'sciany' | 'fundamenty';
 
 /** Pojedynczy fizyczny element konstrukcji (belka / słupek / deska / płyta). */
 export interface Element {
@@ -31,6 +31,8 @@ export interface Element {
   gatunek?: string;
   /** Id materiału poszycia z katalogu (płyty, blacha, papa). */
   material?: string;
+  /** Id klasy betonu z katalogu — element betonowy (płyta, stopa fundamentowa). */
+  beton?: string;
   /**
    * Dane do orientacyjnego sprawdzenia nośności (Etap 1: elementy zginane
    * wolnopodparte). Element bez tego pola jest pomijany w analizie statycznej.
@@ -201,6 +203,19 @@ export interface ScianaDef extends BazaPrymitywu {
   stronaPoszycia?: 1 | -1;
 }
 
+export interface PlytaDef extends BazaPrymitywu {
+  typ: 'plyta';
+  /** Narożnik min-X / min-Y. */
+  pozycja: Vec2;
+  wymiar: Vec2;
+  /** Grubość płyty [m]. */
+  grubosc: number;
+  /** Poziom góry płyty [m] (domyślnie 0). */
+  z?: number;
+  /** Id klasy betonu z katalogu. */
+  klasaBetonu?: string;
+}
+
 export type PrymitywDef =
   | SlupDef
   | BelkaDef
@@ -208,7 +223,8 @@ export type PrymitywDef =
   | PodestDef
   | DachJednospadowyDef
   | DachDwuspadowyDef
-  | ScianaDef;
+  | ScianaDef
+  | PlytaDef;
 
 export type TypPrymitywu = PrymitywDef['typ'];
 

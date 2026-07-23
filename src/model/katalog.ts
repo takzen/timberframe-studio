@@ -239,6 +239,27 @@ export const POSZYCIA: MaterialPoszycia[] = [
   { id: 'papa', nazwa: 'Papa termozgrzewalna', grubosc: 0.005, cenaM2: 34, masa: 5, kolor: '#4a4744', roughness: 0.9 },
 ];
 
+export interface KlasaBetonu {
+  id: string;
+  nazwa: string;
+  /** Charakterystyczna wytrzymałość na ściskanie f_ck [MPa]. */
+  fck: number;
+  /** PLN za m³ (beton towarowy z pompą, orientacyjnie). */
+  cenaM3: number;
+  kolor: string;
+}
+
+export const BETONY: KlasaBetonu[] = [
+  { id: 'c8-10', nazwa: 'C8/10 (chudy, podkład)', fck: 8, cenaM3: 270, kolor: '#a8a8a2' },
+  { id: 'c12-15', nazwa: 'C12/15', fck: 12, cenaM3: 300, kolor: '#a2a2a0' },
+  { id: 'c16-20', nazwa: 'C16/20', fck: 16, cenaM3: 330, kolor: '#9c9c9a' },
+  { id: 'c20-25', nazwa: 'C20/25', fck: 20, cenaM3: 360, kolor: '#969694' },
+  { id: 'c25-30', nazwa: 'C25/30', fck: 25, cenaM3: 400, kolor: '#909090' },
+  { id: 'c30-37', nazwa: 'C30/37', fck: 30, cenaM3: 440, kolor: '#8a8a8a' },
+];
+
+export const znajdzBeton = (id?: string) => BETONY.find((b) => b.id === id) ?? BETONY[2];
+
 export interface Lacznik {
   id: string;
   nazwa: string;
