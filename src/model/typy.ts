@@ -49,6 +49,14 @@ export interface DaneStatyczne {
   pokrycie?: string;
   /** true = element stropu/podestu (obciążenie użytkowe zamiast śniegu). */
   uzytkowe?: boolean;
+  /** Pozycje podpór w rzucie [m] — do prześledzenia ścieżki obciążeń (dach→belka→słup). */
+  podpory?: Vec2[];
+  /**
+   * Indeksy podpór zrównoważonych wewnętrznie (nie przekazują obciążenia dalej) —
+   * kalenica dachu krokwiowego: reakcja pionowa balansuje się z przeciwległą
+   * krokwią, całe obciążenie spływa na okap.
+   */
+  balansowane?: number[];
 }
 
 /** Pola wspólne wszystkich prymitywów. */

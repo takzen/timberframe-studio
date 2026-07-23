@@ -35,6 +35,8 @@ export function generujDachJednospadowy(def: DachJednospadowyDef): Element[] {
   // statyka: rozpiętość między podporami (krawędzie obrysu, bez okapu) po połaci
   const cosA = Math.cos((def.kat * Math.PI) / 180) || 1;
   const rozpietosc = (s1 - s0) / cosA;
+  const planPkt = (s: number, p: number): [number, number] =>
+    osSpadku === 'x' ? [s, p] : [p, s];
 
   rozmiesc(p0 + kw / 2, p1 - kw / 2, rozstaw).forEach((p, i) => {
     const [od, do_] = przesunNadOs(pkt(sA, p, zSpodu(sA)), pkt(sB, p, zSpodu(sB)), kh / 2);
@@ -48,7 +50,13 @@ export function generujDachJednospadowy(def: DachJednospadowyDef): Element[] {
       do: do_,
       przekroj: [kw, kh],
       gatunek: def.gatunek,
-      statyka: { rozpietosc, szerokoscObciazenia: rozstaw, kat: def.kat, pokrycie: poszycie.id },
+      statyka: {
+        rozpietosc,
+        szerokoscObciazenia: rozstaw,
+        kat: def.kat,
+        pokrycie: poszycie.id,
+        podpory: [planPkt(s0, p), planPkt(s1, p)],
+      },
     });
   });
 

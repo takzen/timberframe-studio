@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { analiza } from '../model/statyka/sprawdzenia';
+import { analiza } from '../model/statyka/analiza';
 import { STREFY_SNIEGU } from '../model/statyka/obciazenia';
 import type { Status, WynikElementu } from '../model/statyka/typy';
 import type { Element } from '../model/typy';
@@ -115,10 +115,11 @@ export function PanelAnalizy({ elementy }: { elementy: Element[] }) {
           </table>
 
           <p className="zastrzezenie">
-            Szacunek orientacyjny wg PN-EN 1995-1-1: elementy zginane wolnopodparte,
-            jednoprzęsłowe, obciążenie stałe + {najgorszy && 'śnieg/użytkowe'}, kombinacja
-            1,35·G + 1,5·Q. <strong>Bez</strong> słupów, połączeń, stateczności i wiatru.
-            Nie zastępuje projektu konstrukcyjnego.
+            Szacunek orientacyjny wg PN-EN 1995-1-1: krokwie i legary (zginanie
+            wolnopodparte), belki (ciąg przęseł), słupy (ściskanie z wyboczeniem),
+            kombinacja 1,35·G + 1,5·Q. <strong>Bez</strong> wiatru, połączeń, stateczności
+            globalnej, rozporu i fundamentów. Nie zastępuje projektu konstrukcyjnego —
+            zob. DISCLAIMER.
           </p>
         </>
       )}

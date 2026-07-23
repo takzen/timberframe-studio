@@ -47,6 +47,9 @@ export function generujDachDwuspadowy(def: DachDwuspadowyDef): Element[] {
   // statyka: rozpiętość krokwi = od okapu (krawędź obrysu) do kalenicy, po połaci
   const cosA = Math.cos((def.kat * Math.PI) / 180) || 1;
   const rozpietoscKrokwi = (s1 - s0) / 2 / cosA;
+  const planPkt = (k: number, s: number): [number, number] =>
+    osK === 'x' ? [k, s] : [s, k];
+  const sOkapCz = [s0, s1]; // krawędź okapowa (podpora) każdej połaci
 
   // dwie połacie: od okapu do kalenicy (krokwie dobijają do belki kalenicowej)
   const polacie = [
@@ -75,6 +78,10 @@ export function generujDachDwuspadowy(def: DachDwuspadowyDef): Element[] {
           szerokoscObciazenia: rozstaw,
           kat: def.kat,
           pokrycie: poszycie.id,
+          // podpory: krawędź okapowa tej połaci i kalenica; kalenica (indeks 1)
+          // to dach krokwiowy — jej reakcja spływa na okap, nie na belkę kalenicową
+          podpory: [planPkt(k, sOkapCz[nrPolaci]), planPkt(k, sSrodek)],
+          balansowane: [1],
         },
       });
     });

@@ -5,7 +5,6 @@ import { znajdzGatunek } from '../katalog';
 import type { WlasciwosciMech } from '../katalog';
 import type { Element } from '../typy';
 import { gammaM, kdef, kh, kmod, KCR, psi2 } from './ec5';
-import { obciazenieElementu, type ObciazenieLiniowe } from './obciazenia';
 import type { Status, Sprawdzenie, UstawieniaStatyki, WynikElementu } from './typy';
 
 // granice ugięcia belki (zalecenia EC5 / praktyka PL)
@@ -66,56 +65,71 @@ export function sprawdzZginany(w: WejscieZginane): Sprawdzenie[] {
   ];
 }
 
-const mm = (m: number) => Math.round(m * 1000);
-const kluczGrupy = (el: Element, o: ObciazenieLiniowe) =>
-  `${el.nazwa}|${mm(el.przekroj[0])}×${mm(el.przekroj[1])}|${el.gatunek}|${o.rozpietosc.toFixed(2)}`;
+export const statusWykorzystania = status;
+
+export interface WejscieSciskane {
+  /** Osiowa siła stała N_g [kN] i zmienna N_q [kN]. */
+  Ng: number;
+  Nq: number;
+  /** Wymiary przekroju [m]. */
+  b: number;
+  h: number;
+  /** Długość wyboczeniowa [m] (przyjęto β=1 — słup trzymany na górze przez dach). */
+  L: number;
+  mech: WlasciwosciMech;
+  klasa: UstawieniaStatyki['klasaUzytkowania'];
+}
 
 /**
- * Analiza projektu: grupuje elementy nośne po typie/przekroju/rozpiętości
- * (w grupie obciążenie identyczne) i zwraca najgorsze wykorzystanie każdej grupy.
+ * Ściskanie osiowe z wyboczeniem wg PN-EN 1995-1-1 §6.3.2. Miarodajna jest
+ * mniejsza bezwładność (mniejszy wymiar przekroju). β=1 — słup przegubowy na
+ * obu końcach (u góry trzymany przez konstrukcję dachu).
  */
-export function analiza(elementy: Element[], u: UstawieniaStatyki): WynikElementu[] {
-  const grupy = new Map<string, { el: Element; o: ObciazenieLiniowe; sztuk: number }>();
+export function sprawdzSciskany(w: WejscieSciskane): Sprawdzenie[] {
+  const { Ng, Nq, b, h, L, mech, klasa } = w;
+  const Nd = 1.35 * Ng + 1.5 * Nq; // kN
+  const A = b * h; // m²
+  const iMin = Math.min(b, h) / Math.sqrt(12); // promień bezwładności [m]
+  const lambda = L / iMin;
+  const lambdaRel = (lambda / Math.PI) * Math.sqrt((mech.fc0k * 1000) / (mech.E005 * 1000));
 
-  for (const el of elementy) {
-    if (!el.statyka) continue;
-    const o = obciazenieElementu(el, u);
-    if (!o) continue;
-    const klucz = kluczGrupy(el, o);
-    const istn = grupy.get(klucz);
-    if (istn) istn.sztuk += 1;
-    else grupy.set(klucz, { el, o, sztuk: 1 });
+  const betaC = mech.klejone ? 0.1 : 0.2;
+  let kc = 1;
+  if (lambdaRel > 0.3) {
+    const k = 0.5 * (1 + betaC * (lambdaRel - 0.3) + lambdaRel * lambdaRel);
+    kc = 1 / (k + Math.sqrt(k * k - lambdaRel * lambdaRel));
   }
 
-  const wyniki: WynikElementu[] = [];
-  for (const { el, o, sztuk } of grupy.values()) {
-    const mech = znajdzGatunek(el.gatunek).mech;
-    const sprawdzenia = sprawdzZginany({
-      L: o.rozpietosc,
-      gk: o.gk,
-      qk: o.qk,
-      b: el.przekroj[0],
-      h: el.przekroj[1],
-      mech,
-      klasa: u.klasaUzytkowania,
-    });
-    const najgorsze = sprawdzenia.reduce((a, b) => (b.wykorzystanie > a.wykorzystanie ? b : a));
-    const przekrojMm = `${mm(el.przekroj[0])}×${mm(el.przekroj[1])}`;
-    wyniki.push({
-      opis: `${el.nazwa} ${przekrojMm}`,
-      nazwa: el.nazwa,
-      przekrojMm,
-      gatunek: mech.klasa,
-      rozpietosc: o.rozpietosc,
-      sztuk,
-      sprawdzenia,
-      maksWykorzystanie: najgorsze.wykorzystanie,
-      miarodajne: najgorsze.nazwa,
-      status: status(najgorsze.wykorzystanie),
-      opisObciazenia: `${o.opis} · ${mech.klasa}`,
-    });
-  }
-
-  wyniki.sort((a, b) => b.maksWykorzystanie - a.maksWykorzystanie);
-  return wyniki;
+  const sigmaC = Nd / A; // kPa
+  const fcD = (kmod(klasa, 'srednie') * mech.fc0k * 1000) / gammaM(mech);
+  return [{ nazwa: 'wyboczenie', wykorzystanie: sigmaC / (kc * fcD) }];
 }
+
+const mm = (m: number) => Math.round(m * 1000);
+
+/** Buduje wynik pojedynczego elementu (sztuk = 1) z listy sprawdzeń. */
+export function zbudujWynik(
+  el: Element,
+  sprawdzenia: Sprawdzenie[],
+  rozpietosc: number,
+  opisObciazenia: string,
+): WynikElementu {
+  const najgorsze = sprawdzenia.length
+    ? sprawdzenia.reduce((a, b) => (b.wykorzystanie > a.wykorzystanie ? b : a))
+    : { nazwa: '—', wykorzystanie: 0 };
+  const przekrojMm = `${mm(el.przekroj[0])}×${mm(el.przekroj[1])}`;
+  return {
+    opis: `${el.nazwa} ${przekrojMm}`,
+    nazwa: el.nazwa,
+    przekrojMm,
+    gatunek: znajdzGatunek(el.gatunek).mech.klasa,
+    rozpietosc,
+    sztuk: 1,
+    sprawdzenia,
+    maksWykorzystanie: najgorsze.wykorzystanie,
+    miarodajne: najgorsze.nazwa,
+    status: status(najgorsze.wykorzystanie),
+    opisObciazenia,
+  };
+}
+
