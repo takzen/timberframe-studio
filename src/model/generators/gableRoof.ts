@@ -73,6 +73,12 @@ export function generateGableRoof(def: GableRoofDef): Element[] {
         to,
         section: [rw, rh],
         species: def.species,
+        // plumb cuts at both ends: a cut plane rotated by the pitch off square makes
+        // each end face vertical — plumb tail at the eave, plumb head at the ridge.
+        // The sign follows the rafter's rise direction (from→to), so it holds for
+        // both slopes regardless of how the axis is ordered.
+        startMiter: def.pitch * Math.sign(to[2] - from[2]),
+        endMiter: def.pitch * Math.sign(to[2] - from[2]),
         structural: {
           span: rafterSpan,
           tributaryWidth: spacing,

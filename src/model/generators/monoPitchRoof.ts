@@ -50,6 +50,12 @@ export function generateMonoPitchRoof(def: MonoPitchRoofDef): Element[] {
       to,
       section: [rw, rh],
       species: def.species,
+      // plumb cuts at both ends: a cut plane rotated by the pitch off square makes
+      // each end face vertical — the tail seats the fascia, the head the ridge. The
+      // sign follows the rafter's rise direction (from→to), so it holds whichever
+      // way the generator orders the axis.
+      startMiter: def.pitch * Math.sign(to[2] - from[2]),
+      endMiter: def.pitch * Math.sign(to[2] - from[2]),
       structural: {
         span,
         tributaryWidth: spacing,
