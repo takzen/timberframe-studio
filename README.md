@@ -2,7 +2,7 @@
 
 **Parametric CAD for small timber structures** — timber-frame cabins (35–60 m²), decks, carports and lean-to roofs. Draw a floor plan, pick real lumber from a catalogue, and get a live 3D model with a bill of materials and a cost estimate.
 
-**▶ Try it live: https://takzen.github.io/timberframe-studio/** &nbsp;·&nbsp; runs entirely in the browser, PL/EN toggle in the toolbar.
+**▶ Try it live: https://takzen.github.io/timberframe-studio/** &nbsp;·&nbsp; runs entirely in the browser (desktop, tablet or phone), PL/EN toggle in the toolbar.
 
 > ⚠️ **Work in progress — indicative tool, not a structural design.** This is an early prototype. The structural check is a first-pass estimate to catch gross under-sizing; it is **not** a substitute for a qualified/licensed engineer or a stamped design, and a real build must be checked and approved by one. Full terms — including exactly what the check does and does not cover — are in **[DISCLAIMER.md](DISCLAIMER.md)** (English + Polish). See also [Status](#status).
 
@@ -23,7 +23,7 @@ Every primitive expands into **real individual members** — each stud, rafter a
 ## What it does today
 
 - **Construction primitives** — post, beam, knee brace, deck, mono-pitch roof, gable roof, and stud wall with window/door openings (headers, sills and cripple studs generated automatically).
-- **Direct manipulation** — drag to move, handles to resize, snap to existing points, undo/redo, delete.
+- **Direct manipulation** — drag to move, handles to resize, snap to existing points, copy/paste and duplicate (Ctrl+C/V, Ctrl+D), undo/redo, delete.
 - **Lumber catalogue** — commercial cross-sections, seven species/grades with per-m³ prices, eight sheathing materials with per-m² prices.
 - **Bill of materials and cost** — grouped by member, section and species, with piece counts, cut lengths, running metres, m², m³ and cost. Fasteners (post bases, anchors, angle brackets, structural screws) are added from per-connection rules. Every unit price is editable in the **Prices** dialog and the overrides persist.
 - **Mitred and compound ends** — knee braces get their end faces cut to the angle derived from their pitch, so they seat flat against post and beam. A brace drawn diagonally in plan also gets a side cut, swinging its post-end face onto the nearer post face so it still seats flat instead of meeting the post skew. Rafters are cut plumb at both ends: the cut plane is rotated off square by the roof pitch, so the head meets the ridge vertically and the tail hangs vertically for the fascia. The bill of materials orders the longer edge, not the centreline.
@@ -54,7 +54,7 @@ The core is a two-stage pipeline with a hard boundary in the middle:
 
 ```mermaid
 flowchart LR
-    A["<b>PrymitywDef[]</b><br/>what you draw"]
+    A["<b>PrimitiveDef[]</b><br/>what you draw"]
     B["<b>Element[]</b><br/>real members"]
     C["three.js meshes"]
     D["bill of materials<br/>+ cost"]
@@ -65,7 +65,7 @@ flowchart LR
 
 - A **primitive** is what you draw: a wall from A to B, 2.6 m tall, 60 mm studs at 600 mm centres.
 - A **generator** is a pure function `Def → Element[]` with no dependencies beyond arithmetic. The wall generator emits a sill plate, a top plate, every stud, every header and every sheathing panel as separate elements. Because generators are pure they run outside the browser — the geometry in this repo was verified by executing them in Node and checking coordinates, not by eyeballing screenshots.
-- An **element** is a single physical member: an axis from `od` to `do` in 3D, a cross-section, a species, optional end-cut angles. One representation covers a 200×200 post, a deck board and an OSB panel, which is why there is exactly one renderer and one costing path.
+- An **element** is a single physical member: an axis from `from` to `to` in 3D, a cross-section, a species, optional end-cut angles. One representation covers a 200×200 post, a deck board and an OSB panel, which is why there is exactly one renderer and one costing path.
 
 ```
 src/
@@ -86,14 +86,14 @@ src/
 
 ## Status
 
-Working: drawing, dragging and reshaping, the catalogue, the bill of materials with costs, persistence, both roof types, walls with openings, braces with mitred ends, indicative EC5 checks for rafters, joists, beams and posts with a roof → beam → post load path.
+Working: drawing, dragging, reshaping and copy/paste; the catalogue with editable prices; the bill of materials with costs; a printable report; persistence; both roof types; walls with openings; braces with mitred ends and rafters cut plumb; indicative EC5 checks for rafters, joists, beams and posts with a roof → beam → post load path, plus wind uplift and hold-down; foundations; a responsive layout for tablet and phone.
 
 The structural check covers bending members (rafters, joists), beams (as a series of simple spans between their supports), and posts (compression + buckling), for dead + snow/imposed under 1.35·G + 1.5·Q. Wind (EN 1991-1-4) is covered as roof uplift, the resulting post hold-down (net base tension under 1.0·G + 1.5·W, with an indicative anchor capacity), and the reversed bending of rafters when that uplift overcomes their dead load — it does **not** cover wind pressure on walls, connections, global stability and bracing, rafter thrust, biaxial bending, vibration, or foundations. It makes deliberate simplifications: posts are pinned top and bottom (β=1), gable roofs are treated as **couple roofs** (ridge non-load-bearing, horizontal thrust ignored), the uplift coefficient is a whole-roof resultant (not the local cladding peak), hold-down is checked at discrete posts (not wall studs, whose sill anchorage is a separate design), and decks are checked at full clear span, so a deck with no intermediate bearer correctly reads as overloaded. Treat a green verdict as "not grossly under-sized", not "approved". Full terms in [DISCLAIMER.md](DISCLAIMER.md).
 
 Not there yet:
 
 - **No birdsmouth on the rafters.** The ends are cut plumb, but where a rafter crosses its wall plate there should be a seat notch. The end-cut mechanism only angles the end faces — a notch part-way along a member needs a different solid.
-- No rotation about an element's own centre, no multi-select, no copy/paste.
+- No rotation about an element's own centre, and no multi-select yet (copy/paste and duplicate work on the single selected element).
 - No dimension chains between elements; distances have to be read off coordinates.
 - The origin cannot be moved, and there are no local coordinate systems.
 - **Default prices are indicative** Polish-market figures. The **Prices** dialog in the toolbar lets you override any of them (e.g. from a local sawmill's quote) — type them in or export the list to CSV, fill it in a spreadsheet and import it back (keyed by catalogue id). Overrides persist and re-cost the project, but until you set them, treat the totals as an order-of-magnitude estimate.
