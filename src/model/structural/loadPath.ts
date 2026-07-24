@@ -10,17 +10,24 @@ import type { Element, Vec2 } from '../types';
 import { buildResult, checkBending, checkCompression } from './checks';
 import { memberLoad, selfWeightLine } from './loads';
 import type { Check, MemberResult, StructuralSettings } from './types';
+import { HOLD_DOWN_CAPACITY, roofUpliftPressure } from './wind';
 
 const TOL = 0.25; // tolerance matching a support to a beam/post in plan [m]
 
 const BEAM_NAMES = new Set(['beam', 'eavesBeam', 'canopyBeam', 'ledgerBeam', 'ridgeBeam']);
 const isPostLike = (name: string) => name === 'post' || name === 'canopyPost' || name === 'stud';
+// hold-down (base anchor uplift) is a discrete-post check; a wall stud is
+// anchored through the sill plate as a system, not by its own base, so it is
+// excluded — wall uplift anchorage is out of scope (see the disclaimer)
+const isColumn = (name: string) => name === 'post' || name === 'canopyPost';
 
 interface Reaction {
   point: Vec2;
   /** Reaction from permanent / variable load [kN]. */
   Rg: number;
   Rq: number;
+  /** Upward reaction from wind uplift [kN]. */
+  Rw: number;
 }
 
 const dist2 = (a: Vec2, b: Vec2) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -41,7 +48,9 @@ function projectOnSegment(p: Vec2, a: Vec2, b: Vec2): { d: number; along: number
 /**
  * Vertical reactions of every rafter at its supports. The total load (g·L, q·L)
  * splits evenly between the non-balanced supports — for a couple (gable) roof
- * everything flows to the eaves, for a mono-pitch roof it splits in half.
+ * everything flows to the eaves, for a mono-pitch roof it splits in half. The
+ * wind uplift acts on the plan (horizontal) area, so it uses the horizontal run
+ * L·cosα, and it splits the same way — an upward reaction at the same supports.
  */
 function rafterReactions(elements: Element[], s: StructuralSettings): Reaction[] {
   const r: Reaction[] = [];
@@ -53,9 +62,13 @@ function rafterReactions(elements: Element[], s: StructuralSettings): Reaction[]
     const balanced = new Set(st.balanced ?? []);
     const active = st.supports.map((_, i) => i).filter((i) => !balanced.has(i));
     if (active.length === 0) continue;
+    const cosA = Math.cos((st.pitch * Math.PI) / 180) || 1;
+    const zRef = Math.max(el.from[2], el.to[2]);
+    const wk = roofUpliftPressure(s, st.pitch, zRef); // net uplift [kN/m²]
     const Rg = (o.gk * o.span) / active.length;
     const Rq = (o.qk * o.span) / active.length;
-    for (const i of active) r.push({ point: st.supports[i], Rg, Rq });
+    const Rw = (wk * st.tributaryWidth * o.span * cosA) / active.length;
+    for (const i of active) r.push({ point: st.supports[i], Rg, Rq, Rw });
   }
   return r;
 }
@@ -81,7 +94,7 @@ function checkBeam(
   const supports = [0, span, ...postsAlong].sort((x, y) => x - y);
   const unique = supports.filter((t, i) => i === 0 || t - supports[i - 1] > TOL);
 
-  const supportReactions: Reaction[] = unique.map((t) => ({ point: toPoint(t), Rg: 0, Rq: 0 }));
+  const supportReactions: Reaction[] = unique.map((t) => ({ point: toPoint(t), Rg: 0, Rq: 0, Rw: 0 }));
   const worstChecks: Check[] = [];
   let maxU = -1;
   let govSpan = span;
@@ -98,6 +111,7 @@ function checkBeam(
     });
     const sumRg = inBay.reduce((s2, r) => s2 + r.Rg, 0);
     const sumRq = inBay.reduce((s2, r) => s2 + r.Rq, 0);
+    const sumRw = inBay.reduce((s2, r) => s2 + r.Rw, 0);
     const gk = sumRg / bay + gSelf; // equivalent uniform load [kN/m]
     const qk = sumRq / bay;
 
@@ -120,8 +134,10 @@ function checkBeam(
     // bay reactions to both supports (uniform load → half each)
     supportReactions[i].Rg += (gk * bay) / 2;
     supportReactions[i].Rq += (qk * bay) / 2;
+    supportReactions[i].Rw += sumRw / 2;
     supportReactions[i + 1].Rg += (gk * bay) / 2;
     supportReactions[i + 1].Rq += (qk * bay) / 2;
+    supportReactions[i + 1].Rw += sumRw / 2;
   }
 
   const result = buildResult(beam, worstChecks, govSpan, { kind: 'beam', grade: mech.grade });
@@ -154,10 +170,10 @@ export function solveLoadPath(
 
   const rafters = rafterReactions(elements, s);
 
-  // accumulator of post axial load
-  const postAxial = new Map<string, { Ng: number; Nq: number }>();
-  for (const p of posts) postAxial.set(p.id, { Ng: 0, Nq: 0 });
-  const addToPost = (point: Vec2, Rg: number, Rq: number): boolean => {
+  // accumulator of post axial load (Ng/Nq downward, Nw upward wind uplift)
+  const postAxial = new Map<string, { Ng: number; Nq: number; Nw: number }>();
+  for (const p of posts) postAxial.set(p.id, { Ng: 0, Nq: 0, Nw: 0 });
+  const addToPost = (point: Vec2, Rg: number, Rq: number, Rw: number): boolean => {
     let nearest: Element | null = null;
     let nd = TOL;
     for (const p of posts) {
@@ -171,6 +187,7 @@ export function solveLoadPath(
       const acc = postAxial.get(nearest.id)!;
       acc.Ng += Rg;
       acc.Nq += Rq;
+      acc.Nw += Rw;
       return true;
     }
     return false;
@@ -190,7 +207,7 @@ export function solveLoadPath(
       }
     }
     if (nearest) onBeam.get(nearest.id)!.push(r);
-    else addToPost(r.point, r.Rg, r.Rq); // rafter straight onto a post
+    else addToPost(r.point, r.Rg, r.Rq, r.Rw); // rafter straight onto a post
   }
 
   // 2) check beams, pass their reactions onto posts
@@ -204,18 +221,19 @@ export function solveLoadPath(
       .map((r) => r.along);
     const { result, supportReactions } = checkBeam(beam, onBeam.get(beam.id)!, postsAlong, s);
     results.push(result);
-    for (const sr of supportReactions) addToPost(sr.point, sr.Rg, sr.Rq);
+    for (const sr of supportReactions) addToPost(sr.point, sr.Rg, sr.Rq, sr.Rw);
   }
 
   // 3) check posts in buckling and collect their axial loads
   const loadedPosts: LoadedPost[] = [];
   for (const p of posts) {
-    const { Ng, Nq } = postAxial.get(p.id)!;
+    const { Ng, Nq, Nw } = postAxial.get(p.id)!;
     const length = Math.abs(p.to[2] - p.from[2]) || 2.4;
     const mech = findSpecies(p.species).mech;
     const gSelf = selfWeightLine(p) * length;
+    const gPerm = Ng + gSelf;
     const checks = checkCompression({
-      Ng: Ng + gSelf,
+      Ng: gPerm,
       Nq,
       b: p.section[0],
       h: p.section[1],
@@ -223,8 +241,16 @@ export function solveLoadPath(
       mech,
       cls: s.serviceClass,
     });
-    const Nd = 1.35 * (Ng + gSelf) + 1.5 * Nq;
-    results.push(buildResult(p, checks, length, { kind: 'axial', Nd, grade: mech.grade }));
+    // hold-down: net tension at the base under wind uplift, permanent load
+    // favourable (γ_G = 1.0), wind leading (γ_Q = 1.5). Snow omitted — favourable.
+    const Td = isColumn(p.name) ? 1.5 * Nw - 1.0 * gPerm : 0;
+    if (Td > 0) {
+      checks.push({ nameKey: 'check.holdDown', utilisation: Td / HOLD_DOWN_CAPACITY });
+    }
+    const Nd = 1.35 * gPerm + 1.5 * Nq;
+    const note = { kind: 'axial' as const, Nd, grade: mech.grade, ...(Td > 0 ? { Td } : {}) };
+    // buildResult picks the worst of buckling and hold-down for the status
+    results.push(buildResult(p, checks, length, note));
     loadedPosts.push({
       id: p.id,
       name: p.name,

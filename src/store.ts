@@ -4,11 +4,24 @@ import type { Language } from './i18n';
 import { newPrimitive, typeInfo } from './model/defaults';
 import type { FoundationSettings } from './model/foundations/types';
 import { findSnowZone } from './model/structural/loads';
+import { findWindZone } from './model/structural/wind';
 import type { ServiceClass, StructuralSettings } from './model/structural/types';
 import type { Group, PrimitiveDef, PrimitiveType, Vec2 } from './model/types';
 
 export type ViewMode = 'full' | 'frame';
 export type Tool = 'select' | PrimitiveType;
+
+/** Default structural settings — also used to backfill older persisted state. */
+const DEFAULT_STRUCTURAL: StructuralSettings = {
+  snowZone: 2,
+  snowSk: 0.9,
+  serviceClass: 2,
+  imposedLoad: 2.0,
+  windZone: 1,
+  windVb0: 22,
+  terrain: 2,
+  openStructure: false,
+};
 
 export const GROUPS: { id: Group; labelKey: string }[] = [
   { id: 'posts', labelKey: 'group.posts' },
@@ -62,6 +75,10 @@ interface State {
   setSnowSk: (sk: number) => void;
   setServiceClass: (c: ServiceClass) => void;
   setImposedLoad: (q: number) => void;
+  setWindZone: (zone: number) => void;
+  setWindVb0: (v: number) => void;
+  setTerrain: (t: 0 | 1 | 2 | 3 | 4) => void;
+  setOpenStructure: (open: boolean) => void;
   setFoundations: (changes: Partial<FoundationSettings>) => void;
   setLanguage: (lang: Language) => void;
   undo: () => void;
@@ -108,7 +125,7 @@ export const useStore = create<State>()(
         },
         showGrid: true,
         showUtilisation: true,
-        structural: { snowZone: 2, snowSk: 0.9, serviceClass: 2, imposedLoad: 2.0 },
+        structural: { ...DEFAULT_STRUCTURAL },
         foundations: {
           soilBearing: 150,
           concreteClass: 'c16-20',
@@ -173,6 +190,14 @@ export const useStore = create<State>()(
           set((s) => ({ structural: { ...s.structural, serviceClass } })),
         setImposedLoad: (imposedLoad) =>
           set((s) => ({ structural: { ...s.structural, imposedLoad } })),
+        setWindZone: (zone) =>
+          set((s) => ({
+            structural: { ...s.structural, windZone: zone, windVb0: findWindZone(zone).vb0 },
+          })),
+        setWindVb0: (windVb0) => set((s) => ({ structural: { ...s.structural, windVb0 } })),
+        setTerrain: (terrain) => set((s) => ({ structural: { ...s.structural, terrain } })),
+        setOpenStructure: (openStructure) =>
+          set((s) => ({ structural: { ...s.structural, openStructure } })),
         setFoundations: (changes) =>
           set((s) => ({ foundations: { ...s.foundations, ...changes } })),
         setLanguage: (language) => set({ language }),
@@ -215,8 +240,11 @@ export const useStore = create<State>()(
         foundations: s.foundations,
       }),
       onRehydrateStorage: () => (state) => {
-        // history starts from the loaded project, not from empty
         if (state) {
+          // backfill settings added after this state was saved (e.g. wind), so an
+          // older localStorage doesn't leave new fields undefined → NaN
+          state.structural = { ...DEFAULT_STRUCTURAL, ...state.structural };
+          // history starts from the loaded project, not from empty
           state.history = [state.primitives];
           state.historyIndex = 0;
         }

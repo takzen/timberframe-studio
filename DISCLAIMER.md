@@ -11,7 +11,8 @@ Aplikacja pomaga rozrysować konstrukcję, dobrać przekroje z katalogu, policzy
 Analiza nośności (moduł „Analiza"):
 
 - obejmuje **wyłącznie** elementy zginane wolnopodparte (krokwie, legary), belki jako ciąg przęseł wolnopodpartych oraz słupy na ściskanie z wyboczeniem;
-- **nie obejmuje**: obciążenia wiatrem (w tym odrywania), połączeń i łączników, stateczności globalnej i usztywnienia, rozporu dachu krokwiowego, zginania dwukierunkowego, drgań, fundamentów i posadowienia;
+- wiatr (PN-EN 1991-1-4) uwzględnia **tylko** jako wypór dachu i wynikające z niego wyrywanie kotew słupów (siła netto przy 1,0·G + 1,5·W), z **orientacyjną** nośnością kotwy; współczynnik wyporu jest wypadkową dla całego dachu (nie lokalnym szczytem dla poszycia), a sprawdzenie dotyczy pojedynczych słupów (nie słupków ścian — ich kotwienie w podwalinie to osobny temat);
+- **nie obejmuje**: parcia wiatru na ściany, odwrotnego zginania elementów od ssania, połączeń i łączników, stateczności globalnej i usztywnienia, rozporu dachu krokwiowego, zginania dwukierunkowego, drgań, fundamentów i posadowienia;
 - przyjmuje uproszczenia (m.in. słup przegubowy na obu końcach, dach dwuspadowy jako krokwiowy, taras bez podparć pośrednich, ceny i obciążenia orientacyjne);
 - opiera się na wartościach i wzorach zbliżonych do PN-EN 1995-1-1 i PN-EN 1991, ale **bez pełnej weryfikacji wg norm i bez załączników krajowych w pełnym zakresie**.
 
@@ -26,7 +27,8 @@ The app helps lay out a structure, pick sections from a catalogue, estimate mate
 The structural check:
 
 - covers **only** simply-supported bending members (rafters, joists), beams as a series of simple spans, and posts in axial compression with buckling;
-- does **not** cover wind (including uplift), connections and fasteners, global stability and bracing, rafter thrust, biaxial bending, vibration, or foundations;
+- treats wind (EN 1991-1-4) **only** as roof uplift and the resulting post base hold-down (net tension under 1.0·G + 1.5·W), with an **indicative** anchor capacity; the uplift coefficient is a whole-roof resultant (not the local cladding peak) and the check applies to discrete posts (not wall studs, whose sill anchorage is a separate design);
+- does **not** cover wind pressure on walls, reversed bending of members under suction, connections and fasteners, global stability and bracing, rafter thrust, biaxial bending, vibration, or foundations;
 - makes simplifying assumptions (pinned-end posts, gable roof treated as a couple roof, decks without intermediate bearers, indicative prices and loads);
 - is based on formulas close to Eurocode 5 (EN 1995-1-1) and EN 1991 but **without full code verification**.
 

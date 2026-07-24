@@ -14,6 +14,14 @@ export interface StructuralSettings {
   serviceClass: ServiceClass;
   /** Imposed load on floors/decks q_k [kN/m²]. */
   imposedLoad: number;
+  /** Wind zone (PL) 1–3. */
+  windZone: number;
+  /** Fundamental basic wind velocity v_b,0 [m/s]. */
+  windVb0: number;
+  /** Terrain category (0–4) — surface roughness. */
+  terrain: 0 | 1 | 2 | 3 | 4;
+  /** true = open structure (carport/canopy); false = enclosed building. */
+  openStructure: boolean;
 }
 
 export type Status = 'ok' | 'warn' | 'over';
@@ -31,6 +39,8 @@ export interface LoadNote {
   zone?: number;
   q?: number;
   Nd?: number;
+  /** Net wind uplift tension at the post base [kN] — present when in tension. */
+  Td?: number;
   /** Strength grade, e.g. "C24" (language-neutral). */
   grade: string;
 }

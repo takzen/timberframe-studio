@@ -1,5 +1,6 @@
 import { SNOW_ZONES } from '../model/structural/loads';
 import type { LoadNote, MemberResult, Status } from '../model/structural/types';
+import { WIND_ZONES } from '../model/structural/wind';
 import { useStore } from '../store';
 import { useT } from '../useT';
 import { NumberField, SelectField } from './fields';
@@ -14,6 +15,10 @@ export function AnalysisPanel({ results }: { results: MemberResult[] }) {
   const setSnowSk = useStore((st) => st.setSnowSk);
   const setServiceClass = useStore((st) => st.setServiceClass);
   const setImposedLoad = useStore((st) => st.setImposedLoad);
+  const setWindZone = useStore((st) => st.setWindZone);
+  const setWindVb0 = useStore((st) => st.setWindVb0);
+  const setTerrain = useStore((st) => st.setTerrain);
+  const setOpenStructure = useStore((st) => st.setOpenStructure);
   const toggleUtilisation = useStore((st) => st.toggleUtilisation);
 
   const loadText = (l: LoadNote) => {
@@ -24,7 +29,9 @@ export function AnalysisPanel({ results }: { results: MemberResult[] }) {
           ? t('load.imposed', { q: (l.q ?? 0).toFixed(1) })
           : l.kind === 'beam'
             ? t('load.beam')
-            : t('load.axial', { n: (l.Nd ?? 0).toFixed(1) });
+            : l.Td !== undefined
+              ? t('load.uplift', { t: l.Td.toFixed(1) })
+              : t('load.axial', { n: (l.Nd ?? 0).toFixed(1) });
     return `${head} · ${l.grade}`;
   };
 
@@ -54,7 +61,25 @@ export function AnalysisPanel({ results }: { results: MemberResult[] }) {
           onChange={(v) => setServiceClass(Number(v) as 1 | 2 | 3)}
         />
         <NumberField label={t('analysis.imposedDeck')} unit="kN/m²" value={s.imposedLoad} step={0.5} min={0.5} onChange={setImposedLoad} />
+        <SelectField
+          label={t('analysis.windZone')}
+          value={String(s.windZone)}
+          options={WIND_ZONES.map((z) => ({ value: String(z.zone), label: t(z.labelKey) }))}
+          onChange={(v) => setWindZone(Number(v))}
+        />
+        <NumberField label={t('analysis.windVb0')} unit="m/s" value={s.windVb0} step={1} min={15} onChange={setWindVb0} />
+        <SelectField
+          label={t('analysis.terrain')}
+          value={String(s.terrain)}
+          options={[0, 1, 2, 3, 4].map((c) => ({ value: String(c), label: t(`terrain${c}`) }))}
+          onChange={(v) => setTerrain(Number(v) as 0 | 1 | 2 | 3 | 4)}
+        />
       </div>
+
+      <label className="check">
+        <input type="checkbox" checked={s.openStructure} onChange={(e) => setOpenStructure(e.target.checked)} />
+        {t('analysis.openStructure')}
+      </label>
 
       <div className={`verdict verdict-${worst.status}`}>
         <span className="status-dot" style={{ background: DOT[worst.status] }} />
