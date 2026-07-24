@@ -9,7 +9,9 @@ export const elementLength = (el: { from: Vec3; to: Vec3 }): number =>
 
 /**
  * Stock length needed for a member. With mitred ends the longer edge sticks out
- * beyond the axis distance — that is what gets ordered and cut.
+ * beyond the axis distance — that is what gets ordered and cut. Each edge runs
+ * between corresponding section corners, so the longest one picks up the depth
+ * miter across the height and the side miter across the width.
  */
 export function cutLength(el: {
   from: Vec3;
@@ -17,11 +19,17 @@ export function cutLength(el: {
   section: [number, number];
   startMiter?: number;
   endMiter?: number;
+  startSideMiter?: number;
+  endSideMiter?: number;
 }): number {
   const rad = Math.PI / 180;
   const a = Math.tan((el.startMiter ?? 0) * rad);
   const b = Math.tan((el.endMiter ?? 0) * rad);
-  return elementLength(el) + (el.section[1] / 2) * Math.abs(a - b);
+  const sa = Math.tan((el.startSideMiter ?? 0) * rad);
+  const sb = Math.tan((el.endSideMiter ?? 0) * rad);
+  return (
+    elementLength(el) + (el.section[1] / 2) * Math.abs(a - b) + (el.section[0] / 2) * Math.abs(sa - sb)
+  );
 }
 
 /** Unit vector perpendicular to the from→to axis, as close to vertical as possible (Gram-Schmidt). */

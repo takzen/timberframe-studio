@@ -20,6 +20,23 @@ export function generateBrace(def: BraceDef): Element[] {
   const startMiter = alpha * DEG; // vertical face — seats against the post
   const endMiter = (alpha - Math.PI / 2) * DEG; // horizontal face — seats against the beam
 
+  // The vertical face above points along the brace's plan direction, so a brace
+  // drawn diagonally lands skew to a post, whose faces are always axis-aligned.
+  // Shearing that face across the width swings its normal onto the nearer axis:
+  // the normal is (cx/cosα + t·cy, cy/cosα − t·cx), so cancelling the off-axis
+  // component gives the tangent below. Axis-aligned braces come out at 0.
+  // The beam end needs none of this — it is horizontal, so it seats flat under a
+  // beam whatever the plan angle.
+  const [ux, uy] = reach > 1e-9 ? [dx / reach, dy / reach] : [1, 0];
+  const startSideMiter =
+    reach > 1e-9
+      ? Math.atan(
+          Math.abs(ux) >= Math.abs(uy)
+            ? uy / (ux * Math.cos(alpha))
+            : -ux / (uy * Math.cos(alpha)),
+        ) * DEG
+      : 0;
+
   return (def.bothSides ? [1, -1] : [1]).map((sign, i) => ({
     id: `${def.id}-${i}`,
     fromPrimitive: def.id,
@@ -32,5 +49,8 @@ export function generateBrace(def: BraceDef): Element[] {
     species: def.species,
     startMiter,
     endMiter,
+    // mirroring flips the plan direction, which flips the face normal onto the
+    // opposite post face — the same shear serves both copies
+    startSideMiter,
   }));
 }

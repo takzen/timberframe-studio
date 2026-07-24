@@ -26,7 +26,7 @@ Every primitive expands into **real individual members** — each stud, rafter a
 - **Direct manipulation** — drag to move, handles to resize, snap to existing points, undo/redo, delete.
 - **Lumber catalogue** — commercial cross-sections, seven species/grades with per-m³ prices, eight sheathing materials with per-m² prices.
 - **Bill of materials and cost** — grouped by member, section and species, with piece counts, cut lengths, running metres, m², m³ and cost. Fasteners (post bases, anchors, angle brackets, structural screws) are added from per-connection rules.
-- **Mitred ends** — knee braces get their end faces cut to the angle derived from their pitch, so they seat flat against post and beam. Rafters are cut plumb at both ends: the cut plane is rotated off square by the roof pitch, so the head meets the ridge vertically and the tail hangs vertically for the fascia. The bill of materials orders the longer edge, not the centreline.
+- **Mitred and compound ends** — knee braces get their end faces cut to the angle derived from their pitch, so they seat flat against post and beam. A brace drawn diagonally in plan also gets a side cut, swinging its post-end face onto the nearer post face so it still seats flat instead of meeting the post skew. Rafters are cut plumb at both ends: the cut plane is rotated off square by the roof pitch, so the head meets the ridge vertically and the tail hangs vertically for the fascia. The bill of materials orders the longer edge, not the centreline.
 - **Indicative structural check (Eurocode 5)** — rafters and deck joists as simply-supported bending members, beams as a series of simple spans, and posts in axial compression with buckling. Loads flow down the path roof → beam → post: self-weight from geometry, snow by Polish zone, imposed on decks. Per-member bending / shear / deflection / buckling utilisation, and the over-utilised members are highlighted **in place** — amber (≥90%) and red (>100%) on both the 2D plan and the 3D model, so you can see exactly which beam is the one at 178%. Updates live as you resize a section. Explicitly bounded — see [Status](#status).
 - **Persistence** — the project autosaves to `localStorage`; export/import as JSON, export the bill of materials as CSV.
 - **Starter templates** — 6×7 m timber-frame cabin with a covered deck, 4×6 m carport, 3×3 m carport.
@@ -94,7 +94,6 @@ Not there yet:
 - No rotation about an element's own centre, no multi-select, no copy/paste.
 - No dimension chains between elements; distances have to be read off coordinates.
 - The origin cannot be moved, and there are no local coordinate systems.
-- Braces drawn diagonally in plan get their pitch cuts right but not the side cuts against the beam.
 - Deck boards are whole boards only — the last few centimetres of a deck are left uncovered instead of ripping a board to width.
 - **Prices are indicative** Polish-market figures hard-coded in `katalog.ts`. Treat the totals as an order-of-magnitude estimate and update the catalogue before quoting anyone.
 

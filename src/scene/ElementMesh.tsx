@@ -57,14 +57,31 @@ export function ElementMesh({
     };
   }, [element]);
 
-  // members with mitred ends (braces) need their own solid instead of a box
+  // members with mitred ends (braces, rafters) need their own solid instead of a box
   const mitred = useMemo(() => {
     const a = element.startMiter ?? 0;
     const b = element.endMiter ?? 0;
-    if (a === 0 && b === 0) return null;
+    const sa = element.startSideMiter ?? 0;
+    const sb = element.endSideMiter ?? 0;
+    if (a === 0 && b === 0 && sa === 0 && sb === 0) return null;
     const rad = Math.PI / 180;
-    return mitredGeometry(length, element.section[0], element.section[1], Math.tan(a * rad), Math.tan(b * rad));
-  }, [length, element.section, element.startMiter, element.endMiter]);
+    return mitredGeometry(
+      length,
+      element.section[0],
+      element.section[1],
+      Math.tan(a * rad),
+      Math.tan(b * rad),
+      Math.tan(sa * rad),
+      Math.tan(sb * rad),
+    );
+  }, [
+    length,
+    element.section,
+    element.startMiter,
+    element.endMiter,
+    element.startSideMiter,
+    element.endSideMiter,
+  ]);
 
   useEffect(() => () => mitred?.dispose(), [mitred]);
 

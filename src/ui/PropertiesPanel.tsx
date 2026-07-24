@@ -6,6 +6,8 @@ import {
   name,
   type SectionUsage,
 } from '../model/catalog';
+import { generateBrace } from '../model/generators/brace';
+import { cutLength, elementLength } from '../model/generators/util';
 import type { OpeningDef, PrimitiveDef, Vec2 } from '../model/types';
 import { useStore } from '../store';
 import { useT } from '../useT';
@@ -309,17 +311,25 @@ function fieldsByType(
     case 'brace': {
       const reach = Math.hypot(def.to[0] - def.from[0], def.to[1] - def.from[1]);
       const arm = def.verticalArm ?? 0.6;
-      const h = (def.section ?? [0.08, 0.12])[1];
-      const axis = Math.hypot(reach, arm);
       const angle = (Math.atan2(arm, reach) * 180) / Math.PI;
-      const rad = Math.PI / 180;
-      const stock = axis + (h / 2) * Math.abs(Math.tan(angle * rad) - Math.tan((angle - 90) * rad));
+      // read the real member back from the generator rather than re-deriving the
+      // cuts here — a second copy of the geometry only drifts out of step
+      const member = generateBrace(def)[0];
+      const axis = elementLength(member);
+      const stock = cutLength(member);
+      const sideMiter = member.startSideMiter ?? 0;
       return (
         <>
           <ReadoutField label={`${t('props.braceLength')} [m]`} value={axis.toFixed(3)} />
           <ReadoutField label={`${t('props.braceMaterial')} [m]`} value={stock.toFixed(3)} />
           <ReadoutField label={`${t('props.braceAngle')} [°]`} value={angle.toFixed(1)} />
-          <ReadoutField label={`${t('props.braceMiter')} [°]`} value={`${angle.toFixed(1)} / ${(90 - angle).toFixed(1)}`} />
+          <ReadoutField
+            label={`${t('props.braceMiter')} [°]`}
+            value={`${(member.startMiter ?? 0).toFixed(1)} / ${Math.abs(member.endMiter ?? 0).toFixed(1)}`}
+          />
+          {Math.abs(sideMiter) >= 0.05 && (
+            <ReadoutField label={`${t('props.braceSideMiter')} [°]`} value={sideMiter.toFixed(1)} />
+          )}
           <NumberField
             label={t('props.braceReach')}
             value={reach}

@@ -39,6 +39,15 @@ export interface Element {
    */
   startMiter?: number;
   endMiter?: number;
+  /**
+   * Side miter in degrees — the same idea rotated a quarter turn: it tilts the
+   * end face about the section-height axis instead of the width axis, which is
+   * the in-plan half of a compound cut. 0 = square in plan. Needed where a
+   * member meets a face it does not run square to, such as a brace drawn
+   * diagonally in plan landing on an axis-aligned post.
+   */
+  startSideMiter?: number;
+  endSideMiter?: number;
 }
 
 export interface StructuralData {
