@@ -1,12 +1,32 @@
-import { Fragment } from 'react';
+import { Fragment, useRef } from 'react';
 import { name } from '../model/catalog';
-import { PRICE_ITEMS, type PriceItem, type PriceKind, type PriceUnit } from '../model/pricing';
+import {
+  PRICE_ITEMS,
+  basePrice,
+  parsePricesCSV,
+  priceOf,
+  pricesToCSV,
+  type PriceItem,
+  type PriceKind,
+  type PriceUnit,
+} from '../model/pricing';
 import { useStore } from '../store';
 import { useT } from '../useT';
 
 const money = (v: number) => v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const KIND_ORDER: PriceKind[] = ['species', 'sheathing', 'concrete', 'fastener'];
+
+function download(content: string, fileName: string) {
+  // BOM so Excel opens the ; / comma-decimal CSV in the right encoding
+  const blob = new Blob(['﻿', content], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function PriceEditor({ onClose }: { onClose: () => void }) {
   const t = useT();
@@ -15,9 +35,28 @@ export function PriceEditor({ onClose }: { onClose: () => void }) {
   const setPrice = useStore((s) => s.setPrice);
   const resetPrice = useStore((s) => s.resetPrice);
   const resetPrices = useStore((s) => s.resetPrices);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const unit = (u: PriceUnit) => t(`price.unit.${u}`);
   const overrides = Object.keys(prices).length;
+
+  const exportCsv = () =>
+    download(
+      pricesToCSV((id) => priceOf(id, prices), (i) => name(i.name, lang)),
+      'cennik.csv',
+    );
+
+  const importCsv = async (file: File) => {
+    const { prices: parsed, skipped } = parsePricesCSV(await file.text());
+    let applied = 0;
+    for (const [id, price] of Object.entries(parsed)) {
+      // a value equal to the default clears the override, keeping the marker honest
+      if (price === basePrice(id)) resetPrice(id);
+      else setPrice(id, price);
+      applied++;
+    }
+    alert(applied === 0 ? t('price.importNone') : t('price.importDone', { applied, skipped }));
+  };
 
   const row = (item: PriceItem) => {
     const overridden = prices[item.id] !== undefined;
@@ -59,12 +98,25 @@ export function PriceEditor({ onClose }: { onClose: () => void }) {
         <header>
           <h2>{t('price.title')}</h2>
           <div className="modal-actions">
+            <button className="mini" onClick={exportCsv}>{t('price.export')}</button>
+            <button className="mini" onClick={() => fileInput.current?.click()}>{t('price.import')}</button>
             <button className="mini" disabled={overrides === 0} onClick={resetPrices}>
               {t('price.resetAll')}{overrides > 0 ? ` (${overrides})` : ''}
             </button>
             <button className="mini close" onClick={onClose}>
               {t('price.close')}
             </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importCsv(f);
+                e.target.value = '';
+              }}
+            />
           </div>
         </header>
         <p className="hint">{t('price.hint')}</p>

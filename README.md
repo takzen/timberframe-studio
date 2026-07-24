@@ -95,7 +95,7 @@ Not there yet:
 - No rotation about an element's own centre, no multi-select, no copy/paste.
 - No dimension chains between elements; distances have to be read off coordinates.
 - The origin cannot be moved, and there are no local coordinate systems.
-- **Default prices are indicative** Polish-market figures. The **Prices** dialog in the toolbar lets you override any of them (e.g. from a local sawmill's quote) — overrides persist and re-cost the project — but until you do, treat the totals as an order-of-magnitude estimate. Importing a price list from a file is not there yet.
+- **Default prices are indicative** Polish-market figures. The **Prices** dialog in the toolbar lets you override any of them (e.g. from a local sawmill's quote) — type them in or export the list to CSV, fill it in a spreadsheet and import it back (keyed by catalogue id). Overrides persist and re-cost the project, but until you set them, treat the totals as an order-of-magnitude estimate.
 
 ## Built with
 
