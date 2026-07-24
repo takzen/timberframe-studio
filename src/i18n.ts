@@ -78,6 +78,7 @@ const pl: Dict = {
   'plan.hintSelected': 'Przeciągnij element, aby przesunąć · złap kwadracik, aby zmienić kształt · Delete usuwa',
   // scene / view
   'scene.title': 'Podgląd 3D',
+  'scene.loading': 'Ładowanie widoku 3D…',
   'view.title': 'Widok',
   'view.full': 'Pełny 3D',
   'view.frameOnly': 'Tylko konstrukcja',
@@ -338,6 +339,7 @@ const en: Dict = {
   'plan.hintFirst': 'Click the first point or drag · Esc cancels',
   'plan.hintSelected': 'Drag to move · grab a handle to reshape · Delete removes',
   'scene.title': '3D preview',
+  'scene.loading': 'Loading 3D view…',
   'view.title': 'View',
   'view.full': 'Full 3D',
   'view.frameOnly': 'Frame only',

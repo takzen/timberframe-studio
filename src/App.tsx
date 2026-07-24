@@ -1,14 +1,17 @@
-import { useMemo } from 'react';
+import { Suspense, lazy, useMemo } from 'react';
 import { analyseFoundations } from './model/foundations/foundations';
 import { generateElements } from './model/generate';
 import { analyseRaw, elementStatuses, grouped, primitiveStatuses } from './model/structural/analysis';
 import { Plan } from './plan/Plan';
-import { Scene } from './scene/Scene';
 import { SidePanel } from './ui/SidePanel';
 import { Toolbar } from './ui/Toolbar';
 import { useStore } from './store';
 import { useT } from './useT';
 import './App.css';
+
+// three.js + react-three-fiber are the bulk of the bundle; load them only when
+// the 3D view first renders, so the plan editor and UI start light
+const Scene = lazy(() => import('./scene/Scene').then((m) => ({ default: m.Scene })));
 
 export default function App() {
   const t = useT();
@@ -64,7 +67,9 @@ export default function App() {
         <section className="scene-pane">
           <h3>{t('scene.title')}</h3>
           <div className="canvas-wrap">
-            <Scene elements={visible} util={showUtilisation ? byElement : null} />
+            <Suspense fallback={<div className="canvas-loading">{t('scene.loading')}</div>}>
+              <Scene elements={visible} util={showUtilisation ? byElement : null} />
+            </Suspense>
           </div>
         </section>
       </main>
