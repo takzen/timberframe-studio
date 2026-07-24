@@ -94,7 +94,6 @@ Not there yet:
 - No rotation about an element's own centre, no multi-select, no copy/paste.
 - No dimension chains between elements; distances have to be read off coordinates.
 - The origin cannot be moved, and there are no local coordinate systems.
-- Deck boards are whole boards only — the last few centimetres of a deck are left uncovered instead of ripping a board to width.
 - **Prices are indicative** Polish-market figures hard-coded in `katalog.ts`. Treat the totals as an order-of-magnitude estimate and update the catalogue before quoting anyone.
 
 ## Built with

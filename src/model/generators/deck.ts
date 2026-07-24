@@ -1,6 +1,9 @@
 import type { DeckDef, Element, Vec3 } from '../types';
 import { distribute } from './util';
 
+/** Narrowest strip worth ripping a board for [m]; below this the edge stays bare. */
+const RIP_MIN = 0.03;
+
 /**
  * Deck: joists every N cm along `joistDirection`, decking boards perpendicular to
  * the joists, laid with a gap. `level` = top-of-boards level.
@@ -44,20 +47,30 @@ export function generateDeck(def: DeckDef): Element[] {
   });
 
   const step = boardW + gap;
-  const boardCount = Math.max(1, Math.floor((lenAlong + gap + 1e-9) / step));
-  for (let i = 0; i < boardCount; i++) {
-    const s = boardW / 2 + i * step;
+  const board = (i: number, s: number, w: number) =>
     el.push({
       id: `${def.id}-board-${i}`,
       fromPrimitive: def.id,
       name: 'deckingBoard',
-      group: 'decks',
-      category: 'sheathing',
+      group: 'decks' as const,
+      category: 'sheathing' as const,
       from: pt(0, s, zBoardAxis),
       to: pt(lenAcross, s, zBoardAxis),
-      section: [boardW, boardT],
+      section: [w, boardT] as [number, number],
       species: boardSpecies,
     });
+
+  const boardCount = Math.max(1, Math.floor((lenAlong + gap + 1e-9) / step));
+  for (let i = 0; i < boardCount; i++) board(i, boardW / 2 + i * step, boardW);
+
+  // full boards leave a strip up to one board-and-gap wide bare at the far edge;
+  // rip a narrower board to fill it, but only once the strip is wider than the
+  // board is thick — below that it would split when fixed, and its width would
+  // stop being its larger dimension (which the m² costing keys on). Its far edge
+  // lands exactly on the deck edge, one gap past the last full board.
+  const ripWidth = lenAlong - boardCount * step;
+  if (ripWidth > Math.max(RIP_MIN, boardT)) {
+    board(boardCount, boardCount * step + ripWidth / 2, ripWidth);
   }
 
   return el;
