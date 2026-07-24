@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Language } from './i18n';
 import { newPrimitive, typeInfo } from './model/defaults';
+import { moveBy } from './plan/editing';
 import type { FoundationSettings } from './model/foundations/types';
 import type { PriceOverrides } from './model/pricing';
 import { findSnowZone } from './model/structural/loads';
@@ -34,6 +35,8 @@ export const GROUPS: { id: Group; labelKey: string }[] = [
 ];
 
 const MAX_HISTORY = 60;
+/** Plan-metres a pasted copy is shifted from its source so it is grabbable. */
+const PASTE_OFFSET = 0.3;
 const newId = () => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 interface State {
@@ -58,8 +61,14 @@ interface State {
 
   history: PrimitiveDef[][];
   historyIndex: number;
+  /** Copied primitive awaiting paste — ephemeral, not persisted. */
+  clipboard: PrimitiveDef | null;
 
   add: (type: PrimitiveType, a: Vec2, b: Vec2) => void;
+  /** Copies the selected primitive to the clipboard. */
+  copy: () => void;
+  /** Pastes the clipboard as a new primitive, offset and selected. */
+  paste: () => void;
   update: (id: string, changes: Partial<PrimitiveDef>) => void;
   /** Live preview of a change during dragging — does not clutter the history. */
   updateLive: (id: string, changes: Partial<PrimitiveDef>) => void;
@@ -140,6 +149,7 @@ export const useStore = create<State>()(
           footingThickness: 0.4,
         },
         prices: {},
+        clipboard: null,
         history: [[]],
         historyIndex: 0,
 
@@ -150,6 +160,35 @@ export const useStore = create<State>()(
           const id = newId();
           const def = newPrimitive(type, id, `${prefix}-${used + 1}`, a, b, workLevel);
           withHistory([...primitives, def], { selected: id, tool: 'select' });
+        },
+
+        copy: () => {
+          const { selected, primitives } = get();
+          const def = primitives.find((p) => p.id === selected);
+          if (def) set({ clipboard: structuredClone(def) });
+        },
+
+        paste: () => {
+          const { clipboard, primitives } = get();
+          if (!clipboard) return;
+          const { prefix } = typeInfo(clipboard.type);
+          const used = primitives.filter((p) => typeInfo(p.type).prefix === prefix).length;
+          const id = newId();
+          // offset so the copy lands beside the original, not on top of it; the
+          // clipboard advances to the pasted copy so repeated pastes cascade
+          const def = {
+            ...structuredClone(clipboard),
+            ...moveBy(clipboard, PASTE_OFFSET, PASTE_OFFSET),
+            id,
+            label: `${prefix}-${used + 1}`,
+          } as PrimitiveDef;
+          // clipboard is an independent deep copy, never the stored object, so a
+          // later edit to the pasted primitive can't drift the clipboard
+          withHistory([...primitives, def], {
+            selected: id,
+            tool: 'select',
+            clipboard: structuredClone(def),
+          });
         },
 
         update: (id, changes) => {
@@ -228,12 +267,12 @@ export const useStore = create<State>()(
         },
 
         load: (name, primitives) => {
-          set({ name, selected: null, tool: 'select', history: [[]], historyIndex: 0 });
+          set({ name, selected: null, tool: 'select', clipboard: null, history: [[]], historyIndex: 0 });
           withHistory(primitives);
         },
         setName: (name) => set({ name }),
         reset: () => {
-          set({ name: '', selected: null, tool: 'select', history: [[]], historyIndex: 0 });
+          set({ name: '', selected: null, tool: 'select', clipboard: null, history: [[]], historyIndex: 0 });
           withHistory([]);
         },
       };

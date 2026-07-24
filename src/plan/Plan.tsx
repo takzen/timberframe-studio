@@ -73,6 +73,8 @@ export function Plan({
   const add = useStore((s) => s.add);
   const select = useStore((s) => s.select);
   const remove = useStore((s) => s.remove);
+  const copy = useStore((s) => s.copy);
+  const paste = useStore((s) => s.paste);
   const updateLive = useStore((s) => s.updateLive);
   const commit = useStore((s) => s.commit);
   const setTool = useStore((s) => s.setTool);
@@ -138,10 +140,26 @@ export function Plan({
         e.preventDefault();
         remove(selected);
       }
+      const mod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+      // don't hijack Ctrl+C when the user is copying selected text elsewhere
+      if (mod && key === 'c' && selected && !window.getSelection()?.toString()) {
+        e.preventDefault();
+        copy();
+      }
+      if (mod && key === 'v') {
+        e.preventDefault();
+        paste();
+      }
+      if (mod && key === 'd' && selected) {
+        e.preventDefault();
+        copy();
+        paste();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [cancel, remove, selected]);
+  }, [cancel, remove, copy, paste, selected]);
 
   useEffect(() => setStart(null), [tool]);
 

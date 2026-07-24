@@ -75,7 +75,7 @@ const pl: Dict = {
   'plan.hintPoint': 'Kliknij, aby postawić słup',
   'plan.hintSecond': 'Kliknij drugi punkt · Esc anuluje',
   'plan.hintFirst': 'Kliknij pierwszy punkt lub przeciągnij · Esc anuluje',
-  'plan.hintSelected': 'Przeciągnij element, aby przesunąć · złap kwadracik, aby zmienić kształt · Delete usuwa',
+  'plan.hintSelected': 'Przeciągnij element, aby przesunąć · złap kwadracik, aby zmienić kształt · Ctrl+C/V kopiuje · Delete usuwa',
   // scene / view
   'scene.title': 'Podgląd 3D',
   'scene.loading': 'Ładowanie widoku 3D…',
@@ -337,7 +337,7 @@ const en: Dict = {
   'plan.hintPoint': 'Click to place a post',
   'plan.hintSecond': 'Click the second point · Esc cancels',
   'plan.hintFirst': 'Click the first point or drag · Esc cancels',
-  'plan.hintSelected': 'Drag to move · grab a handle to reshape · Delete removes',
+  'plan.hintSelected': 'Drag to move · grab a handle to reshape · Ctrl+C/V to copy · Delete removes',
   'scene.title': '3D preview',
   'scene.loading': 'Loading 3D view…',
   'view.title': 'View',
