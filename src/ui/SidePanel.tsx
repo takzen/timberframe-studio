@@ -29,7 +29,8 @@ export function SidePanel({
   const toggleGroup = useStore((s) => s.toggleGroup);
   const toggleGrid = useStore((s) => s.toggleGrid);
 
-  const b = bill(elements);
+  const prices = useStore((s) => s.prices);
+  const b = bill(elements, prices);
 
   const exportBill = () => {
     const csv = toCSV(

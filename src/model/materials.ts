@@ -1,4 +1,5 @@
 import { FASTENERS, findFastener, findSheathing, findSpecies } from './catalog';
+import { priceOf, type PriceOverrides } from './pricing';
 import type { Category, Element } from './types';
 import { cutLength, elementLength } from './generators/util';
 
@@ -117,27 +118,32 @@ function fastenersFor(el: Element): { id: string; count: number }[] {
   }
 }
 
-function materialInfo(el: Element): {
+function materialInfo(
+  el: Element,
+  prices: PriceOverrides,
+): {
   id: string;
   plate: boolean;
   cost: (m3: number, m2: number) => number;
 } {
   if (el.material) {
     const m = findSheathing(el.material);
-    return { id: m.id, plate: true, cost: (_m3, m2) => m2 * m.pricePerM2 };
+    const p = priceOf(m.id, prices, m.pricePerM2);
+    return { id: m.id, plate: true, cost: (_m3, m2) => m2 * p };
   }
   const s = findSpecies(el.species);
-  return { id: s.id, plate: false, cost: (m3) => m3 * s.pricePerM3 };
+  const p = priceOf(s.id, prices, s.pricePerM3);
+  return { id: s.id, plate: false, cost: (m3) => m3 * p };
 }
 
-export function bill(elements: Element[]): Bill {
+export function bill(elements: Element[], prices: PriceOverrides = {}): Bill {
   const groups = new Map<string, { item: BillItem; lens: Map<number, number> }>();
   const pcs = new Map<string, number>();
 
   for (const el of elements) {
     if (el.concrete) continue; // concrete priced separately in the foundations module
     const sectionMm = sectionLabel(el.section);
-    const { id, plate, cost } = materialInfo(el);
+    const { id, plate, cost } = materialInfo(el, prices);
     const key = `${el.category}|${el.name}|${sectionMm}|${id}`;
     // order and cut the longer edge, not the axis — with miters that is a difference
     const len = round(cutLength(el));
@@ -194,7 +200,8 @@ export function bill(elements: Element[]): Bill {
 
   const fasteners: FastenerItem[] = FASTENERS.filter((f) => pcs.has(f.id)).map((f) => {
     const count = pcs.get(f.id) ?? 0;
-    return { id: f.id, pcs: count, pricePerPc: f.pricePerPc, cost: round(count * f.pricePerPc) };
+    const price = priceOf(f.id, prices, f.pricePerPc);
+    return { id: f.id, pcs: count, pricePerPc: price, cost: round(count * price) };
   });
 
   const sum = (f: (i: BillItem) => number) => round(items.reduce((s, i) => s + f(i), 0));

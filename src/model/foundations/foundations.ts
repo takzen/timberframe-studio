@@ -1,4 +1,5 @@
 import { findConcrete } from '../catalog';
+import { priceOf, type PriceOverrides } from '../pricing';
 import { memberLoad } from '../structural/loads';
 import { solveLoadPath } from '../structural/loadPath';
 import type { Status, StructuralSettings } from '../structural/types';
@@ -100,19 +101,21 @@ export function analyseFoundations(
   elements: Element[],
   structural: StructuralSettings,
   f: FoundationSettings,
+  prices: PriceOverrides = {},
 ): FoundationAnalysis {
   const concrete = findConcrete(f.concreteClass);
+  const concretePrice = priceOf(concrete.id, prices, concrete.pricePerM3);
   const { posts } = solveLoadPath(elements, structural);
 
   // footings only under free-standing posts; wall studs bear on the sill/slab
   const footings = posts
     .filter((p) => p.name !== 'stud')
-    .map((p) => sizeFooting(p.id, p.point, p.Nd, f, concrete.pricePerM3));
+    .map((p) => sizeFooting(p.id, p.point, p.Nd, f, concretePrice));
   const footingElements = footings.map((w) => footingBlock(w, concrete.id));
 
   const slabs = primitives
     .filter((p): p is SlabDef => p.type === 'slab')
-    .map((p) => checkSlab(p, elements, structural, f, concrete.pricePerM3));
+    .map((p) => checkSlab(p, elements, structural, f, concretePrice));
 
   const volume =
     footings.reduce((v, w) => v + w.volume, 0) + slabs.reduce((v, sl) => v + sl.volume, 0);

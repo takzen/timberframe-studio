@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Language } from './i18n';
 import { newPrimitive, typeInfo } from './model/defaults';
 import type { FoundationSettings } from './model/foundations/types';
+import type { PriceOverrides } from './model/pricing';
 import { findSnowZone } from './model/structural/loads';
 import { findWindZone } from './model/structural/wind';
 import type { ServiceClass, StructuralSettings } from './model/structural/types';
@@ -52,6 +53,8 @@ interface State {
   showUtilisation: boolean;
   structural: StructuralSettings;
   foundations: FoundationSettings;
+  /** Price overrides by catalog id — empty = all catalog defaults. */
+  prices: PriceOverrides;
 
   history: PrimitiveDef[][];
   historyIndex: number;
@@ -79,6 +82,9 @@ interface State {
   setWindVb0: (v: number) => void;
   setTerrain: (t: 0 | 1 | 2 | 3 | 4) => void;
   setOpenStructure: (open: boolean) => void;
+  setPrice: (id: string, value: number) => void;
+  resetPrice: (id: string) => void;
+  resetPrices: () => void;
   setFoundations: (changes: Partial<FoundationSettings>) => void;
   setLanguage: (lang: Language) => void;
   undo: () => void;
@@ -133,6 +139,7 @@ export const useStore = create<State>()(
           minFooting: 0.4,
           footingThickness: 0.4,
         },
+        prices: {},
         history: [[]],
         historyIndex: 0,
 
@@ -198,6 +205,13 @@ export const useStore = create<State>()(
         setTerrain: (terrain) => set((s) => ({ structural: { ...s.structural, terrain } })),
         setOpenStructure: (openStructure) =>
           set((s) => ({ structural: { ...s.structural, openStructure } })),
+        setPrice: (id, value) => set((s) => ({ prices: { ...s.prices, [id]: value } })),
+        resetPrice: (id) =>
+          set((s) => {
+            const { [id]: _, ...rest } = s.prices;
+            return { prices: rest };
+          }),
+        resetPrices: () => set({ prices: {} }),
         setFoundations: (changes) =>
           set((s) => ({ foundations: { ...s.foundations, ...changes } })),
         setLanguage: (language) => set({ language }),
@@ -238,12 +252,14 @@ export const useStore = create<State>()(
         showUtilisation: s.showUtilisation,
         structural: s.structural,
         foundations: s.foundations,
+        prices: s.prices,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           // backfill settings added after this state was saved (e.g. wind), so an
           // older localStorage doesn't leave new fields undefined → NaN
           state.structural = { ...DEFAULT_STRUCTURAL, ...state.structural };
+          state.prices = state.prices ?? {};
           // history starts from the loaded project, not from empty
           state.history = [state.primitives];
           state.historyIndex = 0;

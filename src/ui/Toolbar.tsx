@@ -1,9 +1,10 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { TYPES } from '../model/defaults';
 import { readProject } from '../model/migrate';
 import { TEMPLATES } from '../templates';
 import { useStore } from '../store';
 import { useT } from '../useT';
+import { PriceEditor } from './PriceEditor';
 
 function download(content: string, fileName: string, type: string) {
   const blob = new Blob([content], { type });
@@ -18,6 +19,7 @@ function download(content: string, fileName: string, type: string) {
 export function Toolbar() {
   const t = useT();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [priceOpen, setPriceOpen] = useState(false);
   const name = useStore((s) => s.name);
   const tool = useStore((s) => s.tool);
   const workLevel = useStore((s) => s.workLevel);
@@ -122,6 +124,7 @@ export function Toolbar() {
           {t('toolbar.save')}
         </button>
         <button onClick={() => fileInput.current?.click()}>{t('toolbar.load')}</button>
+        <button onClick={() => setPriceOpen(true)}>{t('toolbar.prices')}</button>
         <input
           ref={fileInput}
           type="file"
@@ -134,6 +137,7 @@ export function Toolbar() {
           }}
         />
       </div>
+      {priceOpen && <PriceEditor onClose={() => setPriceOpen(false)} />}
     </header>
   );
 }

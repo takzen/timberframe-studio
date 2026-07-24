@@ -25,7 +25,7 @@ Every primitive expands into **real individual members** — each stud, rafter a
 - **Construction primitives** — post, beam, knee brace, deck, mono-pitch roof, gable roof, and stud wall with window/door openings (headers, sills and cripple studs generated automatically).
 - **Direct manipulation** — drag to move, handles to resize, snap to existing points, undo/redo, delete.
 - **Lumber catalogue** — commercial cross-sections, seven species/grades with per-m³ prices, eight sheathing materials with per-m² prices.
-- **Bill of materials and cost** — grouped by member, section and species, with piece counts, cut lengths, running metres, m², m³ and cost. Fasteners (post bases, anchors, angle brackets, structural screws) are added from per-connection rules.
+- **Bill of materials and cost** — grouped by member, section and species, with piece counts, cut lengths, running metres, m², m³ and cost. Fasteners (post bases, anchors, angle brackets, structural screws) are added from per-connection rules. Every unit price is editable in the **Prices** dialog and the overrides persist.
 - **Mitred and compound ends** — knee braces get their end faces cut to the angle derived from their pitch, so they seat flat against post and beam. A brace drawn diagonally in plan also gets a side cut, swinging its post-end face onto the nearer post face so it still seats flat instead of meeting the post skew. Rafters are cut plumb at both ends: the cut plane is rotated off square by the roof pitch, so the head meets the ridge vertically and the tail hangs vertically for the fascia. The bill of materials orders the longer edge, not the centreline.
 - **Indicative structural check (Eurocode 5 + wind)** — rafters and deck joists as simply-supported bending members, beams as a series of simple spans, and posts in axial compression with buckling. Loads flow down the path roof → beam → post: self-weight from geometry, snow by Polish zone, imposed on decks. Wind (EN 1991-1-4) adds roof uplift by Polish wind zone and terrain category, and checks each post base for net tension (hold-down) — the case that governs light carports. Per-member bending / shear / deflection / buckling / hold-down utilisation, and the over-utilised members are highlighted **in place** — amber (≥90%) and red (>100%) on both the 2D plan and the 3D model, so you can see exactly which beam is the one at 178%, or which post the wind lifts. Updates live as you resize a section. Explicitly bounded — see [Status](#status).
 - **Persistence** — the project autosaves to `localStorage`; export/import as JSON, export the bill of materials as CSV.
@@ -71,7 +71,8 @@ src/
   i18n.ts                 EN/PL dictionary + translate helper
   model/
     types.ts              primitive definitions + the universal Element
-    catalog.ts            sections, species, sheathing, concrete, fasteners — prices
+    catalog.ts            sections, species, sheathing, concrete, fasteners — default prices
+    pricing.ts            editable price overrides on top of the catalogue
     generators/           pure Def → Element[] functions, one per primitive
     materials.ts          bill of materials, fastener rules, cost, CSV
     structural/           indicative EC5 checks + load path
@@ -94,7 +95,7 @@ Not there yet:
 - No rotation about an element's own centre, no multi-select, no copy/paste.
 - No dimension chains between elements; distances have to be read off coordinates.
 - The origin cannot be moved, and there are no local coordinate systems.
-- **Prices are indicative** Polish-market figures hard-coded in `katalog.ts`. Treat the totals as an order-of-magnitude estimate and update the catalogue before quoting anyone.
+- **Default prices are indicative** Polish-market figures. The **Prices** dialog in the toolbar lets you override any of them (e.g. from a local sawmill's quote) — overrides persist and re-cost the project — but until you do, treat the totals as an order-of-magnitude estimate. Importing a price list from a file is not there yet.
 
 ## Built with
 

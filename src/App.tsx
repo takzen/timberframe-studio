@@ -17,6 +17,7 @@ export default function App() {
   const visibleGroups = useStore((s) => s.visibleGroups);
   const structural = useStore((s) => s.structural);
   const foundationSettings = useStore((s) => s.foundations);
+  const prices = useStore((s) => s.prices);
   const showUtilisation = useStore((s) => s.showUtilisation);
 
   const all = useMemo(() => generateElements(primitives), [primitives]);
@@ -27,8 +28,8 @@ export default function App() {
 
   // foundation design: footings under posts (from axial forces) + slab checks
   const foundations = useMemo(
-    () => analyseFoundations(primitives, all, structural, foundationSettings),
-    [primitives, all, structural, foundationSettings],
+    () => analyseFoundations(primitives, all, structural, foundationSettings, prices),
+    [primitives, all, structural, foundationSettings, prices],
   );
 
   // full mesh set = structure + generated footing blocks
