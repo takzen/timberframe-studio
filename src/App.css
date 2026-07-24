@@ -759,3 +759,237 @@ button.mini:disabled:hover {
   color: var(--text-dim);
   background: var(--panel-2);
 }
+
+/* ---------- report (printable document) ---------- */
+
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  padding: 28px 16px;
+  background: rgba(8, 9, 11, 0.72);
+}
+
+.report {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 34px 40px 40px;
+  color: #1a1c20;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.report-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #1a1c20;
+}
+
+.report-head h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.report-meta {
+  margin: 2px 0 0;
+  color: #777;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.report-actions button {
+  padding: 7px 14px;
+  color: #fff;
+  background: #1a1c20;
+  border: 1px solid #1a1c20;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-actions button:last-child {
+  color: #1a1c20;
+  background: #fff;
+}
+
+.report-verdict {
+  margin: 18px 0;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: 4px;
+  background: #fafafa;
+  font-size: 13.5px;
+}
+
+.report-section {
+  margin-top: 22px;
+}
+
+.report-section h2 {
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #444;
+  border-bottom: 1px solid #ddd;
+}
+
+.report-assumptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 24px;
+  margin: 0;
+}
+
+.report-assumptions > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  border-bottom: 1px dotted #e2e2e2;
+}
+
+.report-assumptions dt {
+  color: #666;
+}
+
+.report-assumptions dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+table.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+table.report-table th,
+table.report-table td {
+  padding: 5px 6px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+table.report-table thead th {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  border-bottom: 1px solid #ccc;
+}
+
+table.report-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.report-table .muted {
+  color: #777;
+}
+
+table.report-table .strong {
+  font-weight: 700;
+}
+
+.report-table .dot,
+.report-verdict .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.report-line {
+  margin: 0;
+}
+
+/* recolour the reused dark-theme tables for the light paper */
+.report table.materials,
+.report table.summary {
+  color: #1a1c20;
+}
+
+.report table.materials th,
+.report table.materials td,
+.report table.summary td {
+  border-color: #eee;
+}
+
+.report table.materials thead th {
+  color: #888;
+}
+
+.report table.materials .section-head th {
+  color: #333;
+}
+
+.report table.materials .sub {
+  color: #777;
+}
+
+.report table.summary .grand td,
+.report .report-grand td {
+  border-top: 2px solid #1a1c20;
+  font-weight: 700;
+  color: #1a1c20;
+}
+
+.report-disclaimer {
+  margin-top: 26px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+  color: #777;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+@media print {
+  body > *:not(.report-overlay) {
+    display: none !important;
+  }
+  .report-overlay {
+    position: static;
+    overflow: visible;
+    padding: 0;
+    background: none;
+  }
+  .report {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .report-section,
+  table.report-table tr,
+  .report-verdict {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
