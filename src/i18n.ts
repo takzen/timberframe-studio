@@ -252,6 +252,7 @@ const pl: Dict = {
   'check.deflectionFin': 'ugięcie końc.',
   'check.buckling': 'wyboczenie',
   'check.holdDown': 'wyrywanie (wiatr)',
+  'check.windBending': 'zginanie od ssania',
   // load notes
   'load.snow': 'śnieg strefa {zone}',
   'load.imposed': 'użytkowe {q} kN/m²',
@@ -503,6 +504,7 @@ const en: Dict = {
   'check.deflectionFin': 'final deflection',
   'check.buckling': 'buckling',
   'check.holdDown': 'hold-down (wind)',
+  'check.windBending': 'reversed bending (wind)',
   'load.snow': 'snow zone {zone}',
   'load.imposed': 'imposed {q} kN/m²',
   'load.beam': 'girder',

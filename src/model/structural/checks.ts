@@ -66,6 +66,37 @@ export function checkBending(w: BendingInput): Check[] {
   ];
 }
 
+export interface UpliftBendingInput {
+  /** Span [m]. */
+  L: number;
+  /** Permanent dead line load g_k [kN/m]. */
+  gk: number;
+  /** Characteristic wind uplift line load w_k [kN/m] (upward). */
+  wk: number;
+  b: number;
+  h: number;
+  mech: MechProps;
+  cls: StructuralSettings['serviceClass'];
+}
+
+/**
+ * Reversed bending under net wind uplift: 1.0·G (favourable) − 1.5·W. A member
+ * only bends the other way once the uplift overcomes its dead load; wind is a
+ * short-term action, so k_mod is higher than for snow. Returns a check only when
+ * there is net uplift — otherwise the gravity bending already governs and this
+ * would just read near zero.
+ */
+export function checkWindUpliftBending(w: UpliftBendingInput): Check[] {
+  const { L, gk, wk, b, h, mech, cls } = w;
+  const qNet = 1.5 * wk - 1.0 * gk; // kN/m upward; ≤ 0 means the dead load holds it down
+  if (qNet <= 0) return [];
+  const Md = (qNet * L * L) / 8; // kNm
+  const W = (b * h * h) / 6; // m³
+  const sigmaM = Md / W; // kPa
+  const fmD = (kh(mech, h * 1000) * kmod(cls, 'shortTerm') * mech.fmk * 1000) / gammaM(mech);
+  return [{ nameKey: 'check.windBending', utilisation: sigmaM / fmD }];
+}
+
 export interface CompressionInput {
   /** Axial permanent N_g [kN] and variable N_q [kN]. */
   Ng: number;

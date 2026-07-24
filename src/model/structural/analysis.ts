@@ -3,10 +3,11 @@
 
 import { findSpecies } from '../catalog';
 import type { Element } from '../types';
-import { buildResult, checkBending } from './checks';
+import { buildResult, checkBending, checkWindUpliftBending } from './checks';
 import { memberLoad } from './loads';
 import { loadPathResults } from './loadPath';
 import type { MemberResult, Status, StructuralSettings } from './types';
+import { roofUpliftPressure } from './wind';
 
 const key = (r: MemberResult) => `${r.name}|${r.sectionMm}|${r.span.toFixed(2)}`;
 
@@ -49,6 +50,24 @@ export function analyseRaw(elements: Element[], s: StructuralSettings): MemberRe
       mech,
       cls: s.serviceClass,
     });
+    // roof rafters (not deck joists) can bend the other way under wind suction
+    if (!o.imposed && el.structural) {
+      const st = el.structural;
+      const cosA = Math.cos((st.pitch * Math.PI) / 180) || 1;
+      const zRef = Math.max(el.from[2], el.to[2]);
+      const wkLine = roofUpliftPressure(s, st.pitch, zRef) * st.tributaryWidth * cosA;
+      checks.push(
+        ...checkWindUpliftBending({
+          L: o.span,
+          gk: o.gk,
+          wk: wkLine,
+          b: el.section[0],
+          h: el.section[1],
+          mech,
+          cls: s.serviceClass,
+        }),
+      );
+    }
     raw.push(buildResult(el, checks, o.span, o.note));
   }
 
